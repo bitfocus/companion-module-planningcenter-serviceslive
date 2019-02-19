@@ -54,14 +54,14 @@ instance.prototype.init_pcoserviceslive = function () {
 	let services_url = `${baseAPIUrl}/service_types?per_page=10`;
 
 	self.doRest('GET', services_url, {})
-			.then(function (result) {
-				self.currentState.internal.plans_list = [];
-				self.processServicesData(result.data);
-			})
-			.catch(function (message) {
-				self.log('error', message);
-				self.status(self.STATUS_ERROR, message);
-			});
+	.then(function (result) {
+		self.currentState.internal.plans_list = [];
+		self.processServicesData(result.data);
+	})
+	.catch(function (message) {
+		self.log('error', message);
+		self.status(self.STATUS_ERROR, message);
+	});
 };
 
 instance.prototype.processServicesData = function (result) {
@@ -74,13 +74,13 @@ instance.prototype.processServicesData = function (result) {
 		let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=7`;
 
 		self.doRest('GET', plans_url, {})
-				.then(function (result) {
-					self.processPlansData(result.data);
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.status(self.STATUS_ERROR, message);
-				});
+		.then(function (result) {
+			self.processPlansData(result.data);
+		})
+		.catch(function (message) {
+			self.log('error', message);
+			self.status(self.STATUS_ERROR, message);
+		});
 	}
 };
 
@@ -293,34 +293,39 @@ instance.prototype.action = function (action) {
 
 		switch (action.action) {
 			case 'nextitem':
-				self.takeControl(serviceTypeId, planId).then(function (result) {
+				self.takeControl(serviceTypeId, planId)
+				.then(function (result) {
 					self.controlLive(serviceTypeId, planId, 'next');
-				}).catch(function (message) {
+				})
+				.catch(function (message) {
 					self.log('error', message);
 					self.status(self.STATUS_ERROR, message);
 				});
 				break;
 			case 'previousitem':
 				self.takeControl(serviceTypeId, planId)
-						.then(function (result) {
-							self.controlLive(serviceTypeId, planId, 'previous');
-						}).catch(function (message) {
+				.then(function (result) {
+					self.controlLive(serviceTypeId, planId, 'previous');
+				})
+				.catch(function (message) {
 					self.log('error', message);
 					self.status(self.STATUS_ERROR, message);
 				});
 				break;
 			case 'takecontrol':
 				self.takeControl(serviceTypeId, planId)
-						.then(function (result) {
-						}).catch(function (message) {
+				.then(function (result) {
+				})
+				.catch(function (message) {
 					self.log('error', message);
 					self.status(self.STATUS_ERROR, message);
 				});
 				break;
 			case 'releasecontrol':
 				self.releaseControl(serviceTypeId, planId)
-						.then(function (result) {
-						}).catch(function (message) {
+				.then(function (result) {
+				})
+				.catch(function (message) {
 					self.log('error', message);
 					self.status(self.STATUS_ERROR, message);
 				});
@@ -348,7 +353,8 @@ instance.prototype.doRest = function (method, url, body) {
 				}
 				resolve(objJson);
 
-			} else {
+			}
+			else {
 				// Failure. Reject the promise.
 				var message = 'Unknown error';
 
@@ -369,7 +375,8 @@ instance.prototype.doRest = function (method, url, body) {
 
 		if ((self.config.applicationid === '') || (self.config.secretkey === '')) {
 			reject('Invalid Application ID/Secret Key.');
-		} else {
+		}
+		else {
 			options_auth = {
 				user: self.config.applicationid,
 				password: self.config.secretkey
@@ -382,17 +389,17 @@ instance.prototype.doRest = function (method, url, body) {
 					client.post(url, function (data, response) {
 						handleResponse(null, {data: data, response: response});
 					})
-							.on('error', function (error) {
-								handleResponse(true, {error: error});
-							});
+					.on('error', function (error) {
+						handleResponse(true, {error: error});
+					});
 					break;
 				case 'GET':
 					client.get(url, function (data, response) {
 						handleResponse(null, {data: data, response: response});
 					})
-							.on('error', function (error) {
-								handleResponse(true, {error: error});
-							});
+					.on('error', function (error) {
+						handleResponse(true, {error: error});
+					});
 					break;
 				default:
 					throw new Error('Invalid method');
@@ -414,49 +421,49 @@ instance.prototype.takeControl = function (serviceTypeId, planId) {
 
 	return new Promise(function (resolve, reject) {
 		self.doRest('GET', live_url, {})
+		.then(function (result) {
+			if (result.data.links.controller === null) {
+				//no one is controlling this plan, so let's take control
+				self.doRest('POST', toggle_url, {})
 				.then(function (result) {
-					if (result.data.links.controller === null) {
-						//no one is controlling this plan, so let's take control
-						self.doRest('POST', toggle_url, {})
-								.then(function (result) {
-									resolve(result);
-								})
-								.catch(function (message) {
-									self.log('error', message);
-									self.status(self.STATUS_ERROR, message);
-								});
-					} else {
-						//someone is in control, so let's check to see who it is
-						if (result.data.links.controller === self.currentState.internal.currentController) {
-							//no need to do anything, we are currently in control
-							resolve(result);
-						} else {
-							//we aren't in control, so we need to take control by first toggling the controller to null
-							self.doRest('POST', toggle_url, {})
-									.then(function (result) {
-										//now toggle it back to us
-										self.doRest('POST', toggle_url, {})
-												.then(function (result) {
-													//we should be in control now, let's save the controller to an internal variable so we know who "we" are next time
-													self.currentState.internal.currentController = result.data.links.controller;
-													resolve(result);
-												})
-												.catch(function (message) {
-													self.log('error', message);
-													self.status(self.STATUS_ERROR, message);
-												});
-									})
-									.catch(function (message) {
-										self.log('error', message);
-										self.status(self.STATUS_ERROR, message);
-									});
-						}
-					}
+					resolve(result);
 				})
 				.catch(function (message) {
 					self.log('error', message);
 					self.status(self.STATUS_ERROR, message);
 				});
+			} else {
+				//someone is in control, so let's check to see who it is
+				if (result.data.links.controller === self.currentState.internal.currentController) {
+					//no need to do anything, we are currently in control
+					resolve(result);
+				} else {
+					//we aren't in control, so we need to take control by first toggling the controller to null
+					self.doRest('POST', toggle_url, {})
+					.then(function (result) {
+						//now toggle it back to us
+						self.doRest('POST', toggle_url, {})
+						.then(function (result) {
+							//we should be in control now, let's save the controller to an internal variable so we know who "we" are next time
+							self.currentState.internal.currentController = result.data.links.controller;
+							resolve(result);
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+				}
+			}
+		})
+		.catch(function (message) {
+			self.log('error', message);
+			self.status(self.STATUS_ERROR, message);
+		});
 
 	});
 };
@@ -473,13 +480,13 @@ instance.prototype.releaseControl = function (serviceTypeId, planId) {
 					if (result.data.links.controller !== null) {
 						//let's release control
 						self.doRest('POST', toggle_url, {})
-								.then(function (result) {
-									resolve(result);
-								})
-								.catch(function (message) {
-									self.log('error', message);
-									self.status(self.STATUS_ERROR, message);
-								});
+						.then(function (result) {
+							resolve(result);
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
 					}
 				})
 				.catch(function (message) {
