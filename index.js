@@ -112,26 +112,33 @@ instance.prototype.config_fields = function () {
 
 	return [
 		{
+			type: 'text',
+			id: 'info',
+			width: 12,
+			label: 'Information',
+			value: 'You will need to setup a Personal Access Token in your PCO account.'
+		},
+		{
 			type: 'textinput',
 			id: 'applicationid',
 			label: 'Application ID',
-			width: 20
+			width: 12
 		},
 		{
 			type: 'textinput',
 			id: 'secretkey',
 			label: 'Secret Key',
-			width: 20
+			width: 12
 		}
 	]
-};
+}
 
 // When module gets deleted
 instance.prototype.destroy = function () {
 	var self = this;
 
 	debug('destroy', self.id);
-};
+}
 
 // Set up Feedbacks
 instance.prototype.initFeedbacks = function () {
@@ -142,7 +149,7 @@ instance.prototype.initFeedbacks = function () {
 	};
 
 	//self.setFeedbackDefinitions(feedbacks);
-};
+}
 
 // Set up available variables
 instance.prototype.initVariables = function () {
@@ -159,7 +166,7 @@ instance.prototype.initVariables = function () {
 
 	// Initialize the current state and update Companion with the variables.
 	self.emptyCurrentState();
-};
+}
 
 /**
  * Updates the dynamic variable and records the internal state of that variable.
@@ -176,7 +183,7 @@ instance.prototype.updateVariable = function (name, value) {
 
 	self.currentState.dynamicVariables[name] = value;
 	self.setVariable(name, value);
-};
+}
 
 /**
  * Updates all Companion variables at once.
@@ -187,8 +194,7 @@ instance.prototype.updateAllVariables = function () {
 	Object.keys(self.currentState.dynamicVariables).forEach(function (key) {
 		self.updateVariable(key, self.currentState.dynamicVariables[key]);
 	});
-
-};
+}
 
 /**
  * Initialize an empty current variable state.
@@ -217,15 +223,14 @@ instance.prototype.emptyCurrentState = function () {
 	Object.keys(self.currentState.dynamicVariables).forEach(function (key) {
 		self.updateVariable(key, self.currentState.dynamicVariables[key]);
 	});
-
-};
+}
 
 instance.prototype.init_presets = function () {
 	var self = this;
 	var presets = [];
 
 	self.setPresetDefinitions(presets);
-};
+}
 
 instance.prototype.actions = function (system) {
 	var self = this;
@@ -329,9 +334,10 @@ instance.prototype.action = function (action) {
 					self.log('error', message);
 					self.status(self.STATUS_ERROR, message);
 				});
+				break;
 		}
 	}
-};
+}
 
 instance.prototype.doRest = function (method, url, body) {
 	var self = this;
@@ -351,8 +357,8 @@ instance.prototype.doRest = function (method, url, body) {
 						reject('Unable to parse JSON.');
 					}
 				}
-				resolve(objJson);
 
+				resolve(objJson);
 			}
 			else {
 				// Failure. Reject the promise.
@@ -406,10 +412,8 @@ instance.prototype.doRest = function (method, url, body) {
 					break;
 			}
 		}
-
 	});
-
-};
+}
 
 /* Takes control of the PCO plan which is needed before the plan can be changed. */
 instance.prototype.takeControl = function (serviceTypeId, planId) {
@@ -464,9 +468,8 @@ instance.prototype.takeControl = function (serviceTypeId, planId) {
 			self.log('error', message);
 			self.status(self.STATUS_ERROR, message);
 		});
-
 	});
-};
+}
 
 instance.prototype.releaseControl = function (serviceTypeId, planId) {
 	var self = this;
@@ -476,26 +479,25 @@ instance.prototype.releaseControl = function (serviceTypeId, planId) {
 
 	return new Promise(function (resolve, reject) {
 		self.doRest('GET', live_url, {})
-				.then(function (result) {
-					if (result.data.links.controller !== null) {
-						//let's release control
-						self.doRest('POST', toggle_url, {})
-						.then(function (result) {
-							resolve(result);
-						})
-						.catch(function (message) {
-							self.log('error', message);
-							self.status(self.STATUS_ERROR, message);
-						});
-					}
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.status(self.STATUS_ERROR, message);
-				});
-
+			.then(function (result) {
+				if (result.data.links.controller !== null) {
+					//let's release control
+					self.doRest('POST', toggle_url, {})
+					.then(function (result) {
+						resolve(result);
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+				}
+			})
+			.catch(function (message) {
+				self.log('error', message);
+				self.status(self.STATUS_ERROR, message);
+			});
 	});
-};
+}
 
 instance.prototype.controlLive = function (serviceTypeId, planId, direction) {
 	var self = this;
@@ -514,15 +516,15 @@ instance.prototype.controlLive = function (serviceTypeId, planId, direction) {
 	}
 
 	self.doRest('POST', url, {})
-			.then(function (result) {
-				//plan was moved, let's process the results
-				self.processLiveData(result);
-			})
-			.catch(function (message) {
-				self.log('error', message);
-				self.status(self.STATUS_ERROR, message);
-			});
-};
+		.then(function (result) {
+			//plan was moved, let's process the results
+			self.processLiveData(result);
+		})
+		.catch(function (message) {
+			self.log('error', message);
+			self.status(self.STATUS_ERROR, message);
+		});
+}
 
 instance.prototype.processLiveData = function (result) {
 	var self = this;
@@ -564,7 +566,7 @@ instance.prototype.processLiveData = function (result) {
 			self.updateAllVariables();
 		}
 	}
-};
+}
 
 instance_skel.extendedBy(instance);
 exports = module.exports = instance;
