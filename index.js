@@ -51,7 +51,7 @@ instance.prototype.updateConfig = function (config) {
 instance.prototype.init_pcoserviceslive = function () {
 	var self = this;
 
-	let services_url = `${baseAPIUrl}/service_types?per_page=10`;
+	let services_url = `${baseAPIUrl}/service_types`;
 
 	self.doRest('GET', services_url, {})
 	.then(function (result) {
@@ -158,7 +158,7 @@ instance.prototype.initVariables = function () {
 	var variables = [
 		{
 			label: 'Plans Live Data',
-			id: 'plans_live'
+			name: 'plans_live'
 		}
 	];
 
@@ -260,6 +260,40 @@ instance.prototype.actions = function (system) {
 				}
 			]
 		},
+		'nextitem_specific': {
+			label: 'Go to Next Item of a Specific Plan',
+			options: [
+				{
+					type: 'textinput',
+					label: 'PCO Service Type Id',
+					id: 'servicetypeid',
+					tooltip: 'PCO Service Type Id.'
+				},
+				{
+					type: 'textinput',
+					label: 'PCO Plan Id',
+					id: 'planid',
+					tooltip: 'PCO Plan Id.'
+				}
+			]
+		},
+		'previousitem_specific': {
+			label: 'Go to Previous Item of a Specific Plan',
+			options: [
+				{
+					type: 'textinput',
+					label: 'PCO Service Type Id',
+					id: 'servicetypeid',
+					tooltip: 'PCO Service Type Id to control.'
+				},
+				{
+					type: 'textinput',
+					label: 'PCO Plan Id',
+					id: 'planid',
+					tooltip: 'PCO Plan Id to control.'
+				}
+			]
+		},
 		'takecontrol': {
 			label: 'Take Control',
 			options: [
@@ -281,6 +315,40 @@ instance.prototype.actions = function (system) {
 					id: 'planid',
 					choices: self.currentState.internal.plans_list,
 					tooltip: 'PCO Service Plan to control.'
+				}
+			]
+		},
+		'takecontrol_specific': {
+			label: 'Take Control of a Specific Plan',
+			options: [
+				{
+					type: 'textinput',
+					label: 'PCO Service Type Id',
+					id: 'servicetypeid',
+					tooltip: 'PCO Service Type Id to control.'
+				},
+				{
+					type: 'textinput',
+					label: 'PCO Plan Id',
+					id: 'planid',
+					tooltip: 'PCO Plan Id to control.'
+				}
+			]
+		},
+		'releasecontrol_specific': {
+			label: 'Release Control of a Specific Plan',
+			options: [
+				{
+					type: 'textinput',
+					label: 'PCO Service Type Id',
+					id: 'servicetypeid',
+					tooltip: 'PCO Service Type Id to control.'
+				},
+				{
+					type: 'textinput',
+					label: 'PCO Plan Id',
+					id: 'planid',
+					tooltip: 'PCO Plan Id to control.'
 				}
 			]
 		}
@@ -317,6 +385,26 @@ instance.prototype.action = function (action) {
 					self.status(self.STATUS_ERROR, message);
 				});
 				break;
+			case 'nextitem_specific':
+				self.takeControl(options.servicetypeid, planId)
+				.then(function (result) {
+					self.controlLive(options.servicetypeid, planId, 'next');
+				})
+				.catch(function (message) {
+					self.log('error', message);
+					self.status(self.STATUS_ERROR, message);
+				});
+				break;
+			case 'previousitem_specific':
+				self.takeControl(options.servicetypeid, planId)
+				.then(function (result) {
+					self.controlLive(options.servicetypeid, planId, 'previous');
+				})
+				.catch(function (message) {
+					self.log('error', message);
+					self.status(self.STATUS_ERROR, message);
+				});
+				break;
 			case 'takecontrol':
 				self.takeControl(serviceTypeId, planId)
 				.then(function (result) {
@@ -328,6 +416,24 @@ instance.prototype.action = function (action) {
 				break;
 			case 'releasecontrol':
 				self.releaseControl(serviceTypeId, planId)
+				.then(function (result) {
+				})
+				.catch(function (message) {
+					self.log('error', message);
+					self.status(self.STATUS_ERROR, message);
+				});
+				break;
+			case 'takecontrol_specific':
+				self.takeControl(options.servicetypeid, planId)
+				.then(function (result) {
+				})
+				.catch(function (message) {
+					self.log('error', message);
+					self.status(self.STATUS_ERROR, message);
+				});
+				break;
+			case 'releasecontrol_specific':
+				self.releaseControl(options.servicetypeid, planId)
 				.then(function (result) {
 				})
 				.catch(function (message) {
