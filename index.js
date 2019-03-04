@@ -54,32 +54,45 @@ instance.prototype.init_pcoserviceslive = function () {
 
 	let services_url = `${baseAPIUrl}/service_types`;
 	
-	if (self.config.parentfolder !== '')
-	{
-		services_url += `?where[parent_id]=${self.config.parentfolder}`;
+	if (self.config.servicetypeid !== '') {
+		let serviceTypeId = self.config.servicetypeid;
+		services_url += `/${serviceTypeId}`;
+	}
+	else if (self.config.parentfolder !== '') {
+			services_url += `?where[parent_id]=${self.config.parentfolder}`;
 	}
 
-	self.doRest('GET', services_url, {})
-	.then(function (result) {
-		if (result.data.length > 0) {
-			self.currentState.internal.plans_list = [];
-			self.processServicesData(result.data);
-		}
-	})
-	.catch(function (message) {
-		self.log('error', message);
-		self.status(self.STATUS_ERROR, message);
-	});
+	if ((self.config.applicationid !== '') && (self.config.applicationid !== undefined) && (self.config.secretkey !== '') && (self.config.secretkey !== undefined)) {
+		self.doRest('GET', services_url, {})
+		.then(function (result) {
+			if (result.data.length > 0) {
+				self.currentState.internal.plans_list = [];
+				self.processServicesData(result.data);
+			}
+			else if (result.data.id) { //just one service type returned
+				self.currentState.internal.plans_list = [];
+				let serviceArray = [];
+				serviceArray.push(result.data);
+				self.processServicesData(serviceArray);
+			}
+		})
+		.catch(function (message) {
+			self.log('error', message);
+			self.status(self.STATUS_ERROR, message);
+		});
+	}
 };
 
 instance.prototype.processServicesData = function (result) {
 	var self = this;
 
 	self.currentState.internal.services = result;
+	
+	let perpage = self.config.perpage;
 
 	for (let i = 0; i < result.length; i++) {
 		let serviceTypeId = result[i].id;
-		let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=7`;
+		let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=${perpage}`;
 
 		self.doRest('GET', plans_url, {})
 		.then(function (result) {
@@ -140,8 +153,22 @@ instance.prototype.config_fields = function () {
 			type: 'textinput',
 			id: 'parentfolder',
 			label: 'Parent Folder within PCO to limit service type choices for this instance.',
-			width: 12
-		}
+			width: 3
+		},
+		{
+			type: 'textinput',
+			id: 'servicetypeid',
+			label: 'Restrict plans to choose from to a specific service type id for this instance.',
+			width: 3
+		},
+		{
+			type: 'textinput',
+			id: 'perpage',
+			label: 'The number of plans to return per service type. Default is 7.',
+			width: 3,
+			default: '7',
+			regex: self.REGEX_NUMBER
+		},
 	]
 }
 
