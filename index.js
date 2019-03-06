@@ -14,7 +14,7 @@ function instance(system, id, config) {
 	// super-constructor
 	instance_skel.apply(this, arguments);
 
-	//self.actions(); // export actions
+	self.actions(); // export actions
 
 	return self;
 }
