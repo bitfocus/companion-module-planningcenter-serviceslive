@@ -89,10 +89,19 @@ instance.prototype.processServicesData = function (result) {
 	self.currentState.internal.services = result;
 	
 	let perpage = self.config.perpage;
+	
+	if (result.length > 0) {
+		self.currentState.internal.services_list = [];	
+	}
 
 	for (let i = 0; i < result.length; i++) {
 		let serviceTypeId = result[i].id;
 		let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=${perpage}`;
+		
+		let serviceListObj = {};
+		serviceListObj.id = result[i].id;
+		serviceListObj.label = result[i].attributes.name;
+		self.currentState.internal.services_list.push(serviceListObj);
 
 		self.doRest('GET', plans_url, {})
 		.then(function (result) {
@@ -222,8 +231,6 @@ instance.prototype.initVariables = function () {
  */
 instance.prototype.updateVariable = function (name, value) {
 	var self = this;
-	
-	console.log("updating variable: " + name + ":" + value);
 
 	if (self.currentState.dynamicVariables[name] === undefined) {
 		self.log('warn', 'Variable ' + name + 'does not exist');
@@ -259,6 +266,7 @@ instance.prototype.emptyCurrentState = function () {
 	self.currentState.internal = {
 		services: [],
 		plans: [],
+		services_list: [{id: '', label: 'No services loaded. Update instance config.'}],
 		plans_list: [{id: '', label: 'No plans loaded. Update instance config.'}],
 		currentController: null
 	};
@@ -308,6 +316,30 @@ instance.prototype.actions = function (system) {
 					id: 'planid',
 					choices: self.currentState.internal.plans_list,
 					tooltip: 'PCO Service Plan to control.'
+				}
+			]
+		},
+		'nextitem_inservicetype': {
+			label: 'Go to Next Item of Next Plan in Selected Service Type',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'PCO Service Type',
+					id: 'servicetypeid',
+					choices: self.currentState.internal.services_list,
+					tooltip: 'PCO Service Type'
+				}
+			]
+		},
+		'previousitem_inservicetype': {
+			label: 'Go to Previous Item of Next Plan in Selected Service Type',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'PCO Service Type',
+					id: 'servicetypeid',
+					choices: self.currentState.internal.services_list,
+					tooltip: 'PCO Service Type'
 				}
 			]
 		},
@@ -410,90 +442,140 @@ instance.prototype.action = function (action) {
 	var self = this;
 	var options = action.options;
 
-	let planId = options.planid;
-	let planObj = self.currentState.internal.plans_list.find(p => p.id === planId);
-	if (planObj.serviceTypeId) {
-		let serviceTypeId = planObj.serviceTypeId;
+	let serviceTypeId = null;
+	let planId = null;
+	
+	if (options.planid) {
+		planId = options.planid;
+		let planObj = self.currentState.internal.plans_list.find(p => p.id === planId);
+		if (planObj.serviceTypeId) {
+			serviceTypeId = planObj.serviceTypeId;
 
+			switch (action.action) {
+				case 'nextitem':
+					self.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+						self.controlLive(serviceTypeId, planId, 'next');
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+					break;
+				case 'previousitem':
+					self.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+						self.controlLive(serviceTypeId, planId, 'previous');
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+					break;
+				case 'nextitem_specific':
+					self.takeControl(options.servicetypeid, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+						self.controlLive(options.servicetypeid, planId, 'next');
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+					break;
+				case 'previousitem_specific':
+					self.takeControl(options.servicetypeid, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+						self.controlLive(options.servicetypeid, planId, 'previous');
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+					break;
+				case 'takecontrol':
+					self.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+					break;
+				case 'releasecontrol':
+					self.releaseControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+					break;
+				case 'takecontrol_specific':
+					self.takeControl(options.servicetypeid, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+					break;
+				case 'releasecontrol_specific':
+					self.releaseControl(options.servicetypeid, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});
+					break;
+			}
+		}	
+	}
+	else {
+		//they didn't choose a specific plan
+		
 		switch (action.action) {
-			case 'nextitem':
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.status(self.STATUS_OK);
-					self.controlLive(serviceTypeId, planId, 'next');
+			case 'nextitem_inservicetype':
+				//get the next plan id in the service type, then do the normal requests (take control, advance)
+				serviceTypeId = options.servicetypeid;
+				self.getPlanIdOfServiceType(serviceTypeId)
+				.then(function (planId) {
+					self.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+						self.controlLive(serviceTypeId, planId, 'next');
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});			 
 				})
 				.catch(function (message) {
 					self.log('error', message);
 					self.status(self.STATUS_ERROR, message);
 				});
 				break;
-			case 'previousitem':
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.status(self.STATUS_OK);
-					self.controlLive(serviceTypeId, planId, 'previous');
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.status(self.STATUS_ERROR, message);
-				});
-				break;
-			case 'nextitem_specific':
-				self.takeControl(options.servicetypeid, planId)
-				.then(function (result) {
-					self.status(self.STATUS_OK);
-					self.controlLive(options.servicetypeid, planId, 'next');
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.status(self.STATUS_ERROR, message);
-				});
-				break;
-			case 'previousitem_specific':
-				self.takeControl(options.servicetypeid, planId)
-				.then(function (result) {
-					self.status(self.STATUS_OK);
-					self.controlLive(options.servicetypeid, planId, 'previous');
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.status(self.STATUS_ERROR, message);
-				});
-				break;
-			case 'takecontrol':
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.status(self.STATUS_OK);
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.status(self.STATUS_ERROR, message);
-				});
-				break;
-			case 'releasecontrol':
-				self.releaseControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.status(self.STATUS_OK);
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.status(self.STATUS_ERROR, message);
-				});
-				break;
-			case 'takecontrol_specific':
-				self.takeControl(options.servicetypeid, planId)
-				.then(function (result) {
-					self.status(self.STATUS_OK);
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.status(self.STATUS_ERROR, message);
-				});
-				break;
-			case 'releasecontrol_specific':
-				self.releaseControl(options.servicetypeid, planId)
-				.then(function (result) {
-					self.status(self.STATUS_OK);
+			case 'previousitem_inservicetype':
+				serviceTypeId = options.servicetypeid;
+				self.getPlanIdOfServiceType(serviceTypeId)
+				.then(function (planId) {
+					self.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.status(self.STATUS_OK);
+						self.controlLive(serviceTypeId, planId, 'previous');
+					})
+					.catch(function (message) {
+						self.log('error', message);
+						self.status(self.STATUS_ERROR, message);
+					});			 
 				})
 				.catch(function (message) {
 					self.log('error', message);
@@ -636,6 +718,7 @@ instance.prototype.takeControl = function (serviceTypeId, planId) {
 	});
 }
 
+/* Releases control of the PCO plan */
 instance.prototype.releaseControl = function (serviceTypeId, planId) {
 	var self = this;
 
@@ -706,37 +789,6 @@ instance.prototype.processLiveData = function (result) {
 		if (currentItemId) {
 			let index = items.findIndex((i) => i.id === currentItemId);
 			let item = items.find(i => i.id === currentItemId);
-			
-			console.log(item.attributes.title);
-			/*
-			if (self.currentState.dynamicVariableDefinitions['plan_index_' + result.data.id] === undefined)
-			{
-				let variableObj = {};
-				variableObj.label = 'Plan ' + result.data.id + ' Current Index';
-				variableObj.name = 'plan_index_' + result.data.id;
-				self.currentState.dynamicVariableDefinitions.push(variableObj);
-			}
-			
-			if (self.currentState.dynamicVariableDefinitions['plan_length_' + result.data.id] === undefined)
-			{
-				let variableObj = {};
-				variableObj.label = 'Plan ' + result.data.id + ' Length';
-				variableObj.name = 'plan_length_' + result.data.id;
-				self.currentState.dynamicVariableDefinitions.push(variableObj);
-			}
-			
-			if (self.currentState.dynamicVariableDefinitions['plan_currentitem_' + result.data.id] === undefined)
-			{
-				let variableObj = {};
-				variableObj.label = 'Plan ' + result.data.id + ' Current Item';
-				variableObj.name = 'plan_currentitem_' + result.data.id;
-				self.currentState.dynamicVariableDefinitions.push(variableObj);
-			}
-			
-			self.setVariableDefinitions(self.currentState.dynamicVariableDefinitions);
-			
-			//console.log(self.currentState.dynamicVariableDefinitions);
-			*/
 		   
 			self.updateVariable('plan_index', index);
 			self.updateVariable('plan_length', items.length);
@@ -744,6 +796,23 @@ instance.prototype.processLiveData = function (result) {
 		}
 	}
 }
+
+instance.prototype.getPlanIdOfServiceType = function (serviceTypeId) {
+	var self = this;
+	
+	let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=1`;
+	
+	return new Promise(function (resolve, reject) {	
+		self.doRest('GET', plans_url, {})
+		.then(function (result) {
+			resolve(result.data[0].id);
+		})
+		.catch(function (message) {
+			self.log('error', message);
+			self.status(self.STATUS_ERROR, message);
+		});
+	});
+};
 
 instance_skel.extendedBy(instance);
 exports = module.exports = instance;
