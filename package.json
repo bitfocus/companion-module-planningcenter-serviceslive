@@ -2,7 +2,7 @@
 	"name": "planningcenter-serviceslive",
 	"version": "1.0.2",
 	"api_version": "1.0.0",
-	"keywords": [ "PCO" ],
+	"keywords": [ "Show Control" ],
 	"manufacturer": "Planning Center Online",
 	"product": "Services Live",
 	"shortname": "services-live",
