@@ -19,3 +19,9 @@ Add an action to a button and choose the plan you wish to control.
 * Go to Previous Item
 * Take Control (don't allow others to control LIVE)
 * Release Control (release your account or others from controlling LIVE)
+
+**Available Variables
+* Plan Index
+* Plan Length
+* Plan Current Item
+* Plan Current Length

@@ -206,15 +206,19 @@ instance.prototype.initVariables = function () {
 	var variables = [
 		{
 			label: 'Plan Index',
-			name:  'plan_index'
+			name: 'plan_index'
 		},
 		{
 			label: 'Plan Length',
-			name:  'plan_length'
+			name: 'plan_length'
 		},
 		{
 			label: 'Plan Current Item',
-			name:  'plan_currentitem'
+			name: 'plan_currentitem'
+		},
+		{
+			label: 'Plan Next Item',
+			name: 'plan_nextitem'
 		}
 	];
 
@@ -275,7 +279,8 @@ instance.prototype.emptyCurrentState = function () {
 	self.currentState.dynamicVariables = {
 		plan_index: '',
 		plan_length: '',
-		plan_currentitem: ''
+		plan_currentitem: '',
+		plan_nextitem: ''
 	};
 
 	// Update Companion with the default state of each dynamic variable.
@@ -782,6 +787,7 @@ instance.prototype.processLiveData = function (result) {
 		self.status(self.STATUS_ERROR, result.errors);
 	} else {
 		let items = result.included;
+		
 		let currentItemTimeId = result.data.relationships.current_item_time.data && result.data.relationships.current_item_time.data.id;
 		let currentItemTime = result.included.find((res) => res.type === 'ItemTime' && res.id === currentItemTimeId);
 		let currentItemId = currentItemTime && currentItemTime.relationships && currentItemTime.relationships.item.data && currentItemTime.relationships.item.data.id;
@@ -789,10 +795,15 @@ instance.prototype.processLiveData = function (result) {
 		if (currentItemId) {
 			let index = items.findIndex((i) => i.id === currentItemId);
 			let item = items.find(i => i.id === currentItemId);
-		   
+			
 			self.updateVariable('plan_index', index);
 			self.updateVariable('plan_length', items.length);
 			self.updateVariable('plan_currentitem', item.attributes.title);
+			
+			if (index < items.length) {
+				let nextitem = items[index+1];
+				self.updateVariable('plan_nextitem', nextitem.attributes.title);
+			}
 		}
 	}
 }
