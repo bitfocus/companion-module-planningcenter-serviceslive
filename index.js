@@ -453,96 +453,98 @@ instance.prototype.action = function (action) {
 	if (options.planid) {
 		planId = options.planid;
 		let planObj = self.currentState.internal.plans_list.find(p => p.id === planId);
-		if (planObj.serviceTypeId) {
-			serviceTypeId = planObj.serviceTypeId;
+		if (planObj) {
+			if (planObj.serviceTypeId) {
+				serviceTypeId = planObj.serviceTypeId;
 
-			switch (action.action) {
-				case 'nextitem':
-					self.takeControl(serviceTypeId, planId)
-					.then(function (result) {
-						self.status(self.STATUS_OK);
-						self.controlLive(serviceTypeId, planId, 'next');
-					})
-					.catch(function (message) {
-						self.log('error', message);
-						self.status(self.STATUS_ERROR, message);
-					});
-					break;
-				case 'previousitem':
-					self.takeControl(serviceTypeId, planId)
-					.then(function (result) {
-						self.status(self.STATUS_OK);
-						self.controlLive(serviceTypeId, planId, 'previous');
-					})
-					.catch(function (message) {
-						self.log('error', message);
-						self.status(self.STATUS_ERROR, message);
-					});
-					break;
-				case 'nextitem_specific':
-					self.takeControl(options.servicetypeid, planId)
-					.then(function (result) {
-						self.status(self.STATUS_OK);
-						self.controlLive(options.servicetypeid, planId, 'next');
-					})
-					.catch(function (message) {
-						self.log('error', message);
-						self.status(self.STATUS_ERROR, message);
-					});
-					break;
-				case 'previousitem_specific':
-					self.takeControl(options.servicetypeid, planId)
-					.then(function (result) {
-						self.status(self.STATUS_OK);
-						self.controlLive(options.servicetypeid, planId, 'previous');
-					})
-					.catch(function (message) {
-						self.log('error', message);
-						self.status(self.STATUS_ERROR, message);
-					});
-					break;
-				case 'takecontrol':
-					self.takeControl(serviceTypeId, planId)
-					.then(function (result) {
-						self.status(self.STATUS_OK);
-					})
-					.catch(function (message) {
-						self.log('error', message);
-						self.status(self.STATUS_ERROR, message);
-					});
-					break;
-				case 'releasecontrol':
-					self.releaseControl(serviceTypeId, planId)
-					.then(function (result) {
-						self.status(self.STATUS_OK);
-					})
-					.catch(function (message) {
-						self.log('error', message);
-						self.status(self.STATUS_ERROR, message);
-					});
-					break;
-				case 'takecontrol_specific':
-					self.takeControl(options.servicetypeid, planId)
-					.then(function (result) {
-						self.status(self.STATUS_OK);
-					})
-					.catch(function (message) {
-						self.log('error', message);
-						self.status(self.STATUS_ERROR, message);
-					});
-					break;
-				case 'releasecontrol_specific':
-					self.releaseControl(options.servicetypeid, planId)
-					.then(function (result) {
-						self.status(self.STATUS_OK);
-					})
-					.catch(function (message) {
-						self.log('error', message);
-						self.status(self.STATUS_ERROR, message);
-					});
-					break;
+				switch (action.action) {
+					case 'nextitem':
+						self.takeControl(serviceTypeId, planId)
+						.then(function (result) {
+							self.status(self.STATUS_OK);
+							self.controlLive(serviceTypeId, planId, 'next');
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+						break;
+					case 'previousitem':
+						self.takeControl(serviceTypeId, planId)
+						.then(function (result) {
+							self.status(self.STATUS_OK);
+							self.controlLive(serviceTypeId, planId, 'previous');
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+						break;
+					case 'nextitem_specific':
+						self.takeControl(options.servicetypeid, planId)
+						.then(function (result) {
+							self.status(self.STATUS_OK);
+							self.controlLive(options.servicetypeid, planId, 'next');
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+						break;
+					case 'previousitem_specific':
+						self.takeControl(options.servicetypeid, planId)
+						.then(function (result) {
+							self.status(self.STATUS_OK);
+							self.controlLive(options.servicetypeid, planId, 'previous');
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+						break;
+					case 'takecontrol':
+						self.takeControl(serviceTypeId, planId)
+						.then(function (result) {
+							self.status(self.STATUS_OK);
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+						break;
+					case 'releasecontrol':
+						self.releaseControl(serviceTypeId, planId)
+						.then(function (result) {
+							self.status(self.STATUS_OK);
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+						break;
+					case 'takecontrol_specific':
+						self.takeControl(options.servicetypeid, planId)
+						.then(function (result) {
+							self.status(self.STATUS_OK);
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+						break;
+					case 'releasecontrol_specific':
+						self.releaseControl(options.servicetypeid, planId)
+						.then(function (result) {
+							self.status(self.STATUS_OK);
+						})
+						.catch(function (message) {
+							self.log('error', message);
+							self.status(self.STATUS_ERROR, message);
+						});
+						break;
+				}
 			}
-		}	
+		}
 	}
 	else {
 		//they didn't choose a specific plan
