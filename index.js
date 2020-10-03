@@ -96,7 +96,7 @@ instance.prototype.processServicesData = function (result) {
 
 	for (let i = 0; i < result.length; i++) {
 		let serviceTypeId = result[i].id;
-		let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=${perpage}`;
+		let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=${perpage}&order=sort_date`;
 		
 		let serviceListObj = {};
 		serviceListObj.id = result[i].id;
@@ -813,7 +813,7 @@ instance.prototype.processLiveData = function (result) {
 instance.prototype.getPlanIdOfServiceType = function (serviceTypeId) {
 	var self = this;
 	
-	let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=1`;
+	let plans_url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans?filter=future&per_page=1&order=sort_date`;
 	
 	return new Promise(function (resolve, reject) {	
 		self.doRest('GET', plans_url, {})
