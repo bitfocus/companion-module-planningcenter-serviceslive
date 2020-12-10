@@ -62,15 +62,21 @@ instance.prototype.init_pcoserviceslive = function () {
 			services_url += `?where[parent_id]=${self.config.parentfolder}`;
 	}
 
+	let defaultPlanListObj = {};
+	defaultPlanListObj.id = '0';
+	defaultPlanListObj.label = `(select a plan)`;
+
 	if ((self.config.applicationid !== '') && (self.config.applicationid !== undefined) && (self.config.secretkey !== '') && (self.config.secretkey !== undefined)) {
 		self.doRest('GET', services_url, {})
 		.then(function (result) {
 			if (result.data.length > 0) {
 				self.currentState.internal.plans_list = [];
+				self.currentState.internal.plans_list.push(defaultPlanListObj);
 				self.processServicesData(result.data);
 			}
 			else if (result.data.id) { //just one service type returned
 				self.currentState.internal.plans_list = [];
+				self.currentState.internal.plans_list.push(defaultPlanListObj);
 				let serviceArray = [];
 				serviceArray.push(result.data);
 				self.processServicesData(serviceArray);
