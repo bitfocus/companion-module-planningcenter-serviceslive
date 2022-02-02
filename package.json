@@ -1,8 +1,10 @@
 {
 	"name": "planningcenter-serviceslive",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"api_version": "1.0.0",
-	"keywords": [ "Show Control" ],
+	"keywords": [
+		"Show Control"
+	],
 	"manufacturer": "Planning Center Online",
 	"product": "Services Live",
 	"shortname": "services-live",
