@@ -83,7 +83,9 @@ instance.prototype.init_pcoserviceslive = function () {
 			}
 		})
 		.catch(function (message) {
-			self.log('error', message);
+			console.log('****services url****')
+			console.log(services_url);
+			self.log('error', 'Error getting Services data: ' + message);
 			self.status(self.STATUS_ERROR, message);
 		});
 	}
@@ -114,7 +116,7 @@ instance.prototype.processServicesData = function (result) {
 			self.processPlansData(result.data);
 		})
 		.catch(function (message) {
-			self.log('error', message);
+			self.log('error', 'Error processing Services data: ' + message);
 			self.status(self.STATUS_ERROR, message);
 		});
 	}
@@ -168,13 +170,15 @@ instance.prototype.config_fields = function () {
 			type: 'textinput',
 			id: 'parentfolder',
 			label: 'Parent Folder within PCO to limit service type choices for this instance.',
-			width: 3
+			width: 3,
+			default: ''
 		},
 		{
 			type: 'textinput',
 			id: 'servicetypeid',
 			label: 'Restrict plans to choose from to a specific service type id for this instance.',
-			width: 3
+			width: 3,
+			default: ''
 		},
 		{
 			type: 'textinput',
@@ -725,7 +729,7 @@ instance.prototype.takeControl = function (serviceTypeId, planId) {
 			}
 		})
 		.catch(function (message) {
-			self.log('error', message);
+			self.log('error','Error Taking Control of Plan: ' + message);
 			self.status(self.STATUS_ERROR, message);
 		});
 	});
@@ -754,7 +758,7 @@ instance.prototype.releaseControl = function (serviceTypeId, planId) {
 				}
 			})
 			.catch(function (message) {
-				self.log('error', message);
+				self.log('error', 'Error Releasing Control of Plan: ' + message);
 				self.status(self.STATUS_ERROR, message);
 			});
 	});
@@ -782,7 +786,7 @@ instance.prototype.controlLive = function (serviceTypeId, planId, direction) {
 			self.processLiveData(result);
 		})
 		.catch(function (message) {
-			self.log('error', message);
+			self.log('error', 'Error Controlling LIVE: ' + message);
 			self.status(self.STATUS_ERROR, message);
 		});
 }
