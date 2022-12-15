@@ -461,11 +461,25 @@ instance.prototype.action = function (action) {
 	let planId = null;
 	
 	if (options.planid) {
-		planId = options.planid;
+		let planId = options.planid;
+		self.parseVariables(planId, function (value) {
+			planId = value;
+		});
+
+		
+
 		let planObj = self.currentState.internal.plans_list.find(p => p.id === planId);
 		if (planObj) {
 			if (planObj.serviceTypeId) {
-				serviceTypeId = planObj.serviceTypeId;
+				//choose a selected service type or that from the plan
+				let serviceTypeId = options.servicetypeid;
+				if (serviceTypeId != undefined) {
+					self.parseVariables(serviceTypeId, function (value) {
+						serviceTypeId = value;
+					});
+				} else {
+					serviceTypeId = planObj.serviceTypeId;
+				}
 
 				switch (action.action) {
 					case 'nextitem':
@@ -491,10 +505,10 @@ instance.prototype.action = function (action) {
 						});
 						break;
 					case 'nextitem_specific':
-						self.takeControl(options.servicetypeid, planId)
+						self.takeControl(serviceTypeId, planId)
 						.then(function (result) {
 							self.status(self.STATUS_OK);
-							self.controlLive(options.servicetypeid, planId, 'next');
+							self.controlLive(serviceTypeId, planId, 'next');
 						})
 						.catch(function (message) {
 							self.log('error', message);
@@ -502,10 +516,10 @@ instance.prototype.action = function (action) {
 						});
 						break;
 					case 'previousitem_specific':
-						self.takeControl(options.servicetypeid, planId)
+						self.takeControl(serviceTypeId, planId)
 						.then(function (result) {
 							self.status(self.STATUS_OK);
-							self.controlLive(options.servicetypeid, planId, 'previous');
+							self.controlLive(serviceTypeId, planId, 'previous');
 						})
 						.catch(function (message) {
 							self.log('error', message);
@@ -533,7 +547,7 @@ instance.prototype.action = function (action) {
 						});
 						break;
 					case 'takecontrol_specific':
-						self.takeControl(options.servicetypeid, planId)
+						self.takeControl(serviceTypeId, planId)
 						.then(function (result) {
 							self.status(self.STATUS_OK);
 						})
@@ -543,7 +557,7 @@ instance.prototype.action = function (action) {
 						});
 						break;
 					case 'releasecontrol_specific':
-						self.releaseControl(options.servicetypeid, planId)
+						self.releaseControl(serviceTypeId, planId)
 						.then(function (result) {
 							self.status(self.STATUS_OK);
 						})
@@ -558,11 +572,17 @@ instance.prototype.action = function (action) {
 	}
 	else {
 		//they didn't choose a specific plan
+		//get the service type if specified
+		let serviceTypeId = options.servicetypeid;
+		if (serviceTypeId != undefined) {
+			self.parseVariables(serviceTypeId, function (value) {
+				serviceTypeId = value;
+			});
+		}
 		
 		switch (action.action) {
 			case 'nextitem_inservicetype':
 				//get the next plan id in the service type, then do the normal requests (take control, advance)
-				serviceTypeId = options.servicetypeid;
 				self.getPlanIdOfServiceType(serviceTypeId)
 				.then(function (planId) {
 					self.takeControl(serviceTypeId, planId)
@@ -581,7 +601,6 @@ instance.prototype.action = function (action) {
 				});
 				break;
 			case 'previousitem_inservicetype':
-				serviceTypeId = options.servicetypeid;
 				self.getPlanIdOfServiceType(serviceTypeId)
 				.then(function (planId) {
 					self.takeControl(serviceTypeId, planId)
