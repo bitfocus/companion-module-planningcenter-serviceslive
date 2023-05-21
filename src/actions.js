@@ -314,6 +314,56 @@ module.exports = {
 			}
 		};
 
+		actions.setPlanIdForPolling = {
+			name: 'Set Plan Id for Polling',
+			description: 'Sets the Plan Id to use for polling. This will be set automatically when you control a plan, but this is useful if you are not controlling a plan and want to poll a specific plan.',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'PCO Plan',
+					id: 'planid',
+					default: self.currentState.internal.plans_list[0].id,
+					choices: self.currentState.internal.plans_list,
+					tooltip: 'PCO Service Plan to control.'
+				}
+			],
+			callback: async function(event) {
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
+				let planId = event.options.planid;
+
+				self.lastServiceTypeId = serviceTypeId;
+				self.lastPlanId = planId;
+
+				self.checkVariables();
+
+				self.startInterval();
+			}
+		};
+
+		actions.setPlanIdForPolling_specific = {
+			name: 'Set Plan Id for Polling (Specific Plan Id)',
+			description: 'Sets the Plan Id to use for polling. This will be set automatically when you control a plan, but this is useful if you are not controlling a plan and want to poll a specific plan.',
+			options: [
+				{
+					type: 'textinput',
+					label: 'PCO Plan Id',
+					id: 'planid',
+					tooltip: 'PCO Plan Id to use.'
+				}
+			],
+			callback: async function(event) {
+				let planid = await self.parseVariablesInString(event.options.planid);
+				let serviceTypeId = self.getServiceIdFromPlanId(planid);
+
+				self.lastServiceTypeId = serviceTypeId;
+				self.lastPlanId = planId;
+
+				self.checkVariables();
+				
+				self.startInterval();
+			}
+		};
+
 		actions.restart_interval = {
 			name: 'Restart Interval',
 			description: 'Restarts the internal timer that request new data from PCO periodically.',
