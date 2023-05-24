@@ -74,7 +74,16 @@ module.exports = {
 				min: 1000,
 				max: 30000,
 				default: 3000,
-				required: true
+				required: true,
+				isVisible: (configValues) => configValues.polling == true,
+			},
+			{
+				type: 'textinput',
+				id: 'servicetypeid_polling',
+				label: 'Automatically start polling the next plan of a specific service type id.',
+				width: 3,
+				default: '',
+				isVisible: (configValues) => configValues.polling == true,
 			},
 			{
 				type: 'checkbox',

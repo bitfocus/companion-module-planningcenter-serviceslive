@@ -20,7 +20,7 @@ module.exports = {
 						self.currentState.dynamicVariables.organization_name = result.data.attributes.name;
 					}
 					else {
-						self.currentState.dynamicVariables.organization_namezationName = 'All';
+						self.currentState.dynamicVariables.organization_name = 'All';
 					}
 
 					self.checkVariables();
@@ -47,10 +47,11 @@ module.exports = {
 				defaultPlanListObj.label = `(select a plan)`;
 
 				self.updateStatus(InstanceStatus.Ok, 'Getting Services data...');
+				self.log('info', 'Getting Services data...');
 				self.doRest('GET', services_url, {})
 				.then(function (result) {
 					self.updateStatus(InstanceStatus.Ok, 'Processing Services data...');
-	
+					self.log('info', 'Processing Services data...');
 					if (result.data.length > 0) {
 						self.currentState.internal.plans_list = [];
 						self.currentState.internal.plans_list.push(defaultPlanListObj);
@@ -62,6 +63,20 @@ module.exports = {
 						let serviceArray = [];
 						serviceArray.push(result.data);
 						self.processServicesData(serviceArray);
+					}
+
+					if (self.config.polling && self.config.servicetypeid_polling && self.config.servicetypeid_polling !== '') {
+						self.log('debug', 'Getting Plan Id from Service Type for Polling...');
+						self.getPlanIdOfServiceType(self.config.servicetypeid_polling)
+						.then(function (planId) {
+							self.lastServiceTypeId = self.config.servicetypeid_polling;
+							self.lastPlanId = planId;
+							self.startInterval();
+						})
+						.catch(function (message) {
+							self.log('error', 'Error getting Plan Id from Service Type for Polling: ' + message);
+							self.updateStatus(InstanceStatus.UnknownError, message);
+						});
 					}
 				})
 				.catch(function (message) {
