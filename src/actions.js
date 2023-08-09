@@ -19,7 +19,7 @@ module.exports = {
 				}
 			],
 			callback: async function(event) {
-				let serviceTypeId = self.getServiceTypeIdFromPlanId(event.options.planid);
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
 				let planId = event.options.planid;
 
 				self.takeControl(serviceTypeId, planId)
@@ -47,7 +47,7 @@ module.exports = {
 				}
 			],
 			callback: async function(event) {
-				let serviceTypeId = self.getServiceTypeIdFromPlanId(event.options.planid);
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
 				let planId = event.options.planid;				
 
 				self.takeControl(serviceTypeId, planId)
@@ -211,7 +211,7 @@ module.exports = {
 				}
 			],
 			callback: async function(event) {
-				let serviceTypeId = self.getServiceTypeIdFromPlanId(event.options.planid);
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
 				let planId = event.options.planid;
 
 				self.takeControl(serviceTypeId, planId)
@@ -238,7 +238,7 @@ module.exports = {
 				}
 			],
 			callback: async function(event) {
-				let serviceTypeId = self.getServiceTypeIdFromPlanId(event.options.planid);
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
 				let planId = event.options.planid;
 
 				self.releaseControl(serviceTypeId, planId)
