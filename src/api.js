@@ -245,7 +245,7 @@ module.exports = {
 
 				let args = {};
 
-				if (body !== {}) {
+				if (body) {
 					args = {
 						data: body
 					};
@@ -478,7 +478,6 @@ module.exports = {
 						let planTimeId = item.relationships.plan_time;
 						//with a servicetype id and a plan time id, we can find the current plan name
 
-
 						let dtTimeStarted = new Date(currentItemTime.attributes.live_start_at);
 						let timeStarted_formatted = dtTimeStarted.toLocaleTimeString();
 						let dtTimeShouldFinish = new Date(dtTimeStarted.getTime() + (item.attributes.length * 1000));
@@ -528,18 +527,20 @@ module.exports = {
 								//if next thing is an item, not a header, grab the title
 								//if the next thing is an ItemTime, not an Item, it's likely the "END OF SERVICE"
 
-								if (items[i].attributes.item_type == 'item') {
+								if ((items[i].attributes.item_type == 'item') || (items[i].attributes.item_type == 'song')) {
 									self.currentState.dynamicVariables['plan_nextitem'] = items[i].attributes.title;
 									let timeLength = items[i].attributes.length;
 									let timeLength_formatted = Math.floor(timeLength / 60) + ':' + ('0' + Math.floor(timeLength % 60)).slice(-2);
 									self.currentState.dynamicVariables['plan_nextitem_time_length'] = timeLength_formatted;
 									break;
 								}
+
 								//if the item type is a song, grab the key name and other stuff
-								else if (item.attributes.item_type == 'song') {
+								if (item.attributes.item_type == 'song') {
 									self.currentState.dynamicVariables['plan_nextitem_key'] = item.attributes.key_name;
 								}
-								else if (items[i].type == 'ItemTime') {
+								
+								if (items[i].type == 'ItemTime') {
 									self.currentState.dynamicVariables['plan_nextitem'] = 'END OF SERVICE';
 									self.currentState.dynamicVariables['plan_nextitem_time_length'] = '';
 									break;
