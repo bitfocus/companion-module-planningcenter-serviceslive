@@ -71,6 +71,7 @@ module.exports = {
 						.then(function (planId) {
 							self.lastServiceTypeId = self.config.servicetypeid_polling;
 							self.lastPlanId = planId;
+							self.getTeamPositions();
 							self.startInterval();
 						})
 						.catch(function (message) {
@@ -397,7 +398,7 @@ module.exports = {
 				//plan was moved, let's process the results
 				self.lastServiceTypeId = serviceTypeId;
 				self.lastPlanId = planId;
-	
+				self.getTeamPositions();
 				self.processLiveData(result);
 				self.startInterval();
 			})
@@ -702,6 +703,86 @@ module.exports = {
 			self.ITEM_TIME_REMAINING_INTERVAL = null;
 		}
 	},
+
+	getTeamPositions: function() {
+		let self = this;
+
+		try {
+			let serviceTypeId = self.lastServiceTypeId;
+			let planId = self.lastPlanId;
+	
+			if (serviceTypeId && planId) {
+				let url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans/${planId}/team_members?include=person,team&filter=confirmed`;
+	
+				self.doRest('GET', url, {})
+				.then(function (result) {
+					self.processTeamPositions(result);
+				})
+				.catch(function (message) {
+					self.log('warn', 'Error Getting Team Positions: ' + message);
+				});
+			}
+			else {
+				//we can't get the current team and position data because we don't know what plan they are controlling
+			}
+		}
+		catch(error) {
+			self.log('warn', 'Error getting current team/position data: ' + error);
+		}
+	},
+
+	processTeamPositions: function(result) {
+		let self = this;
+
+		try {
+			let data = result.data;
+			let included = result.included;
+
+			//loop through each person and find their team and position
+			self.scheduledPeople = [];
+			for (let i = 0; i < data.length; i++) {
+				let person = data[i];
+				let personId = person.relationships.person.data.id;
+				let teamId = person.relationships.team.data.id;
+				let team = included.find((res) => res.type === 'Team' && res.id === teamId);
+				let teamName = team?.attributes.name || '';
+				let positionName = person.attributes.team_position_name;
+				let personName = person.attributes.name;
+				let personObj = {
+					personId: personId,
+					name: personName,
+					teamId: teamId,
+					teamName: teamName,
+					positionName: positionName
+				};
+				self.scheduledPeople.push(personObj);
+			}
+
+			//now sort the array by team name and then by position name
+			self.scheduledPeople.sort(function(a, b) {
+				if (a.teamName < b.teamName) {
+					return -1;
+				}
+				if (a.teamName > b.teamName) {
+					return 1;
+				}
+				if (a.positionName < b.positionName) {
+					return -1;
+				}
+				if (a.positionName > b.positionName) {
+					return 1;
+				}
+				return 0;
+			});
+
+			self.initVariables();
+			self.checkVariables();
+		}
+		catch(error) {
+			self.log('warn', 'Error processing team positions: ' + error);
+		}
+	
+	}
 
 	/***** This doesn't work so I commented it out for possible future fix. Need to be able to authenticate as an actual user, not just an API account. ******/
 	/*sendChatMessage: function(serviceTypeId, planId, message) {

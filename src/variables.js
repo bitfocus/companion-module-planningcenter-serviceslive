@@ -1,5 +1,7 @@
 module.exports = {
 	initVariables() {
+		let self = this;
+
 		let variables = [
 			{ variableId: 'org_name',	name: 'Organization Name'},
 
@@ -29,10 +31,40 @@ module.exports = {
 			{ variableId: 'last_plan_name', name: 'Last Controlled Plan Name'}
 		]
 
-		this.setVariableDefinitions(variables);
+		if (self.scheduledPeople.length > 0) {
+			let lastPosition = '';
+			let lastPositionCount = 1;
+			self.scheduledPeople.forEach(person => {
+				let teamName = person.teamName;
+				let teamNameId = teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+				let positionName = person.positionName;
+				let positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+				
+				let teamPositionVariable = {
+					variableId: 'scheduled_' + teamNameId + '_' + positionNameId,
+					name: teamName + ': ' + positionName
+				}
+
+				if (positionName === lastPosition) {
+					lastPositionCount++;
+					teamPositionVariable.variableId += '_' + lastPositionCount;
+				}
+				else {
+					lastPosition = positionName;
+					lastPositionCount = 1;
+				}
+
+				variables.push(teamPositionVariable);
+			});
+		}
+
+		self.setVariableDefinitions(variables);
 	},
 
 	checkVariables() {
+		let self = this;
+
 		try {
 			let variableObj = {};
 
@@ -62,8 +94,34 @@ module.exports = {
 			variableObj.last_servicetype_name = this.lastServiceTypeId ? this.currentState.internal.services.find(service => service.id === this.lastServiceTypeId).attributes.name : '';
 			variableObj.last_plan_id = this.lastPlanId;
 			variableObj.last_plan_name = this.lastPlanId ? this.currentState.internal.plans.find(plan => plan.id === this.lastPlanId).attributes.dates : '';
+
+			if (self.scheduledPeople.length > 0) {
+				//lets build the variables for the teams and positions
+				let lastPosition = '';
+				let lastPositionCount = 1;
+				self.scheduledPeople.forEach(person => {
+					let teamName = person.teamName;
+					let teamNameId = teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+					let positionName = person.positionName;
+					let positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+					
+					let variableId = 'scheduled_' + teamNameId + '_' + positionNameId;
+
+					if (positionName === lastPosition) {
+						lastPositionCount++;
+						variableId += '_' + lastPositionCount;
+					}
+					else {
+						lastPosition = positionName;
+						lastPositionCount = 1;
+					}
+
+					variableObj[variableId] = person.name;
+				});
+			}
 			
-			this.setVariableValues(variableObj);
+			self.setVariableValues(variableObj);
 		}
 		catch(error) {
 			//do something with that error

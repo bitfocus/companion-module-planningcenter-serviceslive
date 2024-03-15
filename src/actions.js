@@ -334,6 +334,8 @@ module.exports = {
 				self.lastServiceTypeId = serviceTypeId;
 				self.lastPlanId = planId;
 
+				self.getTeamPositions();
+
 				self.checkVariables();
 
 				self.startInterval();
@@ -357,6 +359,8 @@ module.exports = {
 
 				self.lastServiceTypeId = serviceTypeId;
 				self.lastPlanId = planId;
+
+				self.getTeamPositions();
 
 				self.checkVariables();
 				
