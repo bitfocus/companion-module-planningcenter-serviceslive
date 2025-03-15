@@ -1,10 +1,9 @@
 const { InstanceStatus } = require('@companion-module/base')
 
 module.exports = {
-
 	initActions() {
-		let self = this; // required to have reference to outer `this`
-		let actions = {};
+		let self = this // required to have reference to outer `this`
+		let actions = {}
 
 		actions.nextitem = {
 			name: 'Go to Next Item',
@@ -15,24 +14,25 @@ module.exports = {
 					id: 'planid',
 					default: self.currentState.internal.plans_list[0].id,
 					choices: self.currentState.internal.plans_list,
-					tooltip: 'PCO Service Plan to control.'
-				}
+					tooltip: 'PCO Service Plan to control.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
-				let planId = event.options.planid;
+			callback: async function (event) {
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid)
+				let planId = event.options.planid
 
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.updateStatus(InstanceStatus.Ok);
-					self.controlLive(serviceTypeId, planId, 'next');
-				})
-				.catch(function (message) {
-					self.log('error', 'Error Going to Next Item: ' + message);
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+				self
+					.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+						self.controlLive(serviceTypeId, planId, 'next')
+					})
+					.catch(function (message) {
+						self.log('error', 'Error Going to Next Item: ' + message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.previousitem = {
 			name: 'Go to Previous Item',
@@ -43,24 +43,25 @@ module.exports = {
 					id: 'planid',
 					default: self.currentState.internal.plans_list[0].id,
 					choices: self.currentState.internal.plans_list,
-					tooltip: 'PCO Service Plan to control.'
-				}
+					tooltip: 'PCO Service Plan to control.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
-				let planId = event.options.planid;				
+			callback: async function (event) {
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid)
+				let planId = event.options.planid
 
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.updateStatus(InstanceStatus.Ok);
-					self.controlLive(serviceTypeId, planId, 'previous');
-				})
-				.catch(function (message) {
-					self.log('error', 'Error going to Previous Item: ' + message);
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+				self
+					.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+						self.controlLive(serviceTypeId, planId, 'previous')
+					})
+					.catch(function (message) {
+						self.log('error', 'Error going to Previous Item: ' + message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.nextitem_inservicetype = {
 			name: 'Go to Next Item of Next Plan in Selected Service Type',
@@ -71,33 +72,35 @@ module.exports = {
 					id: 'servicetypeid',
 					default: self.currentState.internal.services_list[0].id,
 					choices: self.currentState.internal.services_list,
-					tooltip: 'PCO Service Type'
-				}
+					tooltip: 'PCO Service Type',
+				},
 			],
-			callback: async function(event) {
+			callback: async function (event) {
 				//get the next plan id in the service type, then do the normal requests (take control, advance)
-				let serviceTypeId = event.options.servicetypeid;
-				self.getPlanIdOfServiceType(serviceTypeId)
-				.then(function (planId) {
-					self.lastPlanId = planId;
-					self.startInterval();
+				let serviceTypeId = event.options.servicetypeid
+				self
+					.getPlanIdOfServiceType(serviceTypeId)
+					.then(function (planId) {
+						self.lastPlanId = planId
+						self.startInterval()
 
-					self.takeControl(serviceTypeId, planId)
-					.then(function (result) {
-						self.updateStatus(InstanceStatus.Ok);
-						self.controlLive(serviceTypeId, planId, 'next');
+						self
+							.takeControl(serviceTypeId, planId)
+							.then(function (result) {
+								self.updateStatus(InstanceStatus.Ok)
+								self.controlLive(serviceTypeId, planId, 'next')
+							})
+							.catch(function (message) {
+								self.log('error', 'Error going to Next Item: ' + message)
+								self.updateStatus(InstanceStatus.UnknownError, message)
+							})
 					})
 					.catch(function (message) {
-						self.log('error', 'Error going to Next Item: ' + message);
-						self.updateStatus(InstanceStatus.UnknownError, message);
-					});			 
-				})
-				.catch(function (message) {
-					self.log('error', 'Error getting Plan Id from Service Type: ' + message);
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+						self.log('error', 'Error getting Plan Id from Service Type: ' + message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.previousitem_inservicetype = {
 			name: 'Go to Previous Item of Next Plan in Selected Service Type',
@@ -108,29 +111,31 @@ module.exports = {
 					id: 'servicetypeid',
 					default: self.currentState.internal.services_list[0].id,
 					choices: self.currentState.internal.services_list,
-					tooltip: 'PCO Service Type'
-				}
+					tooltip: 'PCO Service Type',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = event.options.servicetypeid;
-				self.getPlanIdOfServiceType(serviceTypeId)
-				.then(function (planId) {
-					self.takeControl(serviceTypeId, planId)
-					.then(function (result) {
-						self.updateStatus(InstanceStatus.Ok);
-						self.controlLive(serviceTypeId, planId, 'previous');
+			callback: async function (event) {
+				let serviceTypeId = event.options.servicetypeid
+				self
+					.getPlanIdOfServiceType(serviceTypeId)
+					.then(function (planId) {
+						self
+							.takeControl(serviceTypeId, planId)
+							.then(function (result) {
+								self.updateStatus(InstanceStatus.Ok)
+								self.controlLive(serviceTypeId, planId, 'previous')
+							})
+							.catch(function (message) {
+								self.log('error', 'Error going to Previous Item: ' + message)
+								self.updateStatus(InstanceStatus.UnknownError, message)
+							})
 					})
 					.catch(function (message) {
-						self.log('error', 'Error going to Previous Item: ' + message);
-						self.updateStatus(InstanceStatus.UnknownError, message);
-					});			 
-				})
-				.catch(function (message) {
-					self.log('error', 'Error getting Plan Id from Service Type: ' + message);
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+						self.log('error', 'Error getting Plan Id from Service Type: ' + message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.nextitem_specific = {
 			name: 'Go to Next Item of a Specific Plan',
@@ -139,31 +144,32 @@ module.exports = {
 					type: 'textinput',
 					label: 'PCO Service Type Id',
 					id: 'servicetypeid',
-					tooltip: 'PCO Service Type Id.'
+					tooltip: 'PCO Service Type Id.',
 				},
 				{
 					type: 'textinput',
 					label: 'PCO Plan Id',
 					id: 'planid',
-					tooltip: 'PCO Plan Id.'
-				}
+					tooltip: 'PCO Plan Id.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid);
-				let planId = await self.parseVariablesInString(event.options.planid);
+			callback: async function (event) {
+				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid)
+				let planId = await self.parseVariablesInString(event.options.planid)
 
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.updateStatus(InstanceStatus.Ok);
-					self.controlLive(serviceTypeId, planId, 'next');
-				})
-				.catch(function (message) {
-					self.log('error', 'Error going to Next Item: ' + message);
-					self.log('debug', 'Are the Service Type Id and Plan Id valid?');
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+				self
+					.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+						self.controlLive(serviceTypeId, planId, 'next')
+					})
+					.catch(function (message) {
+						self.log('error', 'Error going to Next Item: ' + message)
+						self.log('debug', 'Are the Service Type Id and Plan Id valid?')
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.previousitem_specific = {
 			name: 'Go to Previous Item of a Specific Plan',
@@ -172,31 +178,32 @@ module.exports = {
 					type: 'textinput',
 					label: 'PCO Service Type Id',
 					id: 'servicetypeid',
-					tooltip: 'PCO Service Type Id to control.'
+					tooltip: 'PCO Service Type Id to control.',
 				},
 				{
 					type: 'textinput',
 					label: 'PCO Plan Id',
 					id: 'planid',
-					tooltip: 'PCO Plan Id to control.'
-				}
+					tooltip: 'PCO Plan Id to control.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid);
-				let planId = await self.parseVariablesInString(event.options.planid);
+			callback: async function (event) {
+				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid)
+				let planId = await self.parseVariablesInString(event.options.planid)
 
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.updateStatus(InstanceStatus.Ok);
-					self.controlLive(serviceTypeId, planId, 'previous');
-				})
-				.catch(function (message) {
-					self.log('error', 'Error going to Previous Item: ' + message);
-					self.log('debug', 'Are the Service Type Id and Plan Id valid?');
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+				self
+					.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+						self.controlLive(serviceTypeId, planId, 'previous')
+					})
+					.catch(function (message) {
+						self.log('error', 'Error going to Previous Item: ' + message)
+						self.log('debug', 'Are the Service Type Id and Plan Id valid?')
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.takecontrol = {
 			name: 'Take Control',
@@ -207,23 +214,24 @@ module.exports = {
 					id: 'planid',
 					default: self.currentState.internal.plans_list[0].id,
 					choices: self.currentState.internal.plans_list,
-					tooltip: 'PCO Service Plan to control.'
-				}
+					tooltip: 'PCO Service Plan to control.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
-				let planId = event.options.planid;
+			callback: async function (event) {
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid)
+				let planId = event.options.planid
 
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.updateStatus(InstanceStatus.Ok);
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+				self
+					.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+					})
+					.catch(function (message) {
+						self.log('error', message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.releasecontrol = {
 			name: 'Release Control',
@@ -234,23 +242,24 @@ module.exports = {
 					id: 'planid',
 					default: self.currentState.internal.plans_list[0].id,
 					choices: self.currentState.internal.plans_list,
-					tooltip: 'PCO Service Plan to control.'
-				}
+					tooltip: 'PCO Service Plan to control.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
-				let planId = event.options.planid;
+			callback: async function (event) {
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid)
+				let planId = event.options.planid
 
-				self.releaseControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.updateStatus(InstanceStatus.Ok);
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+				self
+					.releaseControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+					})
+					.catch(function (message) {
+						self.log('error', message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.takecontrol_specific = {
 			name: 'Take Control of a Specific Plan',
@@ -259,29 +268,30 @@ module.exports = {
 					type: 'textinput',
 					label: 'PCO Service Type Id',
 					id: 'servicetypeid',
-					tooltip: 'PCO Service Type Id to control.'
+					tooltip: 'PCO Service Type Id to control.',
 				},
 				{
 					type: 'textinput',
 					label: 'PCO Plan Id',
 					id: 'planid',
-					tooltip: 'PCO Plan Id to control.'
-				}
+					tooltip: 'PCO Plan Id to control.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid);
-				let planId = await self.parseVariablesInString(event.options.planid);
+			callback: async function (event) {
+				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid)
+				let planId = await self.parseVariablesInString(event.options.planid)
 
-				self.takeControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.updateStatus(InstanceStatus.Ok);
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+				self
+					.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+					})
+					.catch(function (message) {
+						self.log('error', message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.releasecontrol_specific = {
 			name: 'Release Control of a Specific Plan',
@@ -290,33 +300,35 @@ module.exports = {
 					type: 'textinput',
 					label: 'PCO Service Type Id',
 					id: 'servicetypeid',
-					tooltip: 'PCO Service Type Id to control.'
+					tooltip: 'PCO Service Type Id to control.',
 				},
 				{
 					type: 'textinput',
 					label: 'PCO Plan Id',
 					id: 'planid',
-					tooltip: 'PCO Plan Id to control.'
-				}
+					tooltip: 'PCO Plan Id to control.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid);
-				let planId = await self.parseVariablesInString(event.options.planid);
+			callback: async function (event) {
+				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid)
+				let planId = await self.parseVariablesInString(event.options.planid)
 
-				self.releaseControl(serviceTypeId, planId)
-				.then(function (result) {
-					self.updateStatus(InstanceStatus.Ok);
-				})
-				.catch(function (message) {
-					self.log('error', message);
-					self.updateStatus(InstanceStatus.UnknownError, message);
-				});
-			}
-		};
+				self
+					.releaseControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+					})
+					.catch(function (message) {
+						self.log('error', message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
 
 		actions.setPlanIdForPolling = {
 			name: 'Set Plan Id for Polling',
-			description: 'Sets the Plan Id to use for polling. This will be set automatically when you control a plan, but this is useful if you are not controlling a plan and want to poll a specific plan.',
+			description:
+				'Sets the Plan Id to use for polling. This will be set automatically when you control a plan, but this is useful if you are not controlling a plan and want to poll a specific plan.',
 			options: [
 				{
 					type: 'dropdown',
@@ -324,67 +336,68 @@ module.exports = {
 					id: 'planid',
 					default: self.currentState.internal.plans_list[0].id,
 					choices: self.currentState.internal.plans_list,
-					tooltip: 'PCO Service Plan to control.'
-				}
+					tooltip: 'PCO Service Plan to control.',
+				},
 			],
-			callback: async function(event) {
-				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid);
-				let planId = event.options.planid;
+			callback: async function (event) {
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid)
+				let planId = event.options.planid
 
-				self.lastServiceTypeId = serviceTypeId;
-				self.lastPlanId = planId;
+				self.lastServiceTypeId = serviceTypeId
+				self.lastPlanId = planId
 
-				self.getTeamPositions();
+				self.getTeamPositions()
 
-				self.checkVariables();
+				self.checkVariables()
 
-				self.startInterval();
-			}
-		};
+				self.startInterval()
+			},
+		}
 
 		actions.setPlanIdForPolling_specific = {
 			name: 'Set Plan Id for Polling (Specific Plan Id)',
-			description: 'Sets the Plan Id to use for polling. This will be set automatically when you control a plan, but this is useful if you are not controlling a plan and want to poll a specific plan.',
+			description:
+				'Sets the Plan Id to use for polling. This will be set automatically when you control a plan, but this is useful if you are not controlling a plan and want to poll a specific plan.',
 			options: [
 				{
 					type: 'textinput',
 					label: 'PCO Plan Id',
 					id: 'planid',
-					tooltip: 'PCO Plan Id to use.'
-				}
+					tooltip: 'PCO Plan Id to use.',
+				},
 			],
-			callback: async function(event) {
-				let planid = await self.parseVariablesInString(event.options.planid);
-				let serviceTypeId = self.getServiceIdFromPlanId(planid);
+			callback: async function (event) {
+				let planid = await self.parseVariablesInString(event.options.planid)
+				let serviceTypeId = self.getServiceIdFromPlanId(planid)
 
-				self.lastServiceTypeId = serviceTypeId;
-				self.lastPlanId = planId;
+				self.lastServiceTypeId = serviceTypeId
+				self.lastPlanId = planId
 
-				self.getTeamPositions();
+				self.getTeamPositions()
 
-				self.checkVariables();
-				
-				self.startInterval();
-			}
-		};
+				self.checkVariables()
+
+				self.startInterval()
+			},
+		}
 
 		actions.restart_interval = {
 			name: 'Restart Interval',
 			description: 'Restarts the internal timer that request new data from PCO periodically.',
 			options: [],
-			callback: async function(event) {
-				self.startInterval();
-			}
+			callback: async function (event) {
+				self.startInterval()
+			},
 		}
 
 		actions.stop_interval = {
 			name: 'Stop Interval',
 			description: 'Stops the internal timer that request new data from PCO periodically.',
 			options: [],
-			callback: async function(event) {
-				self.stopInterval();
-			}
-		};
+			callback: async function (event) {
+				self.stopInterval()
+			},
+		}
 
 		/*actions.send_chat_message = {
 			name: 'Send Chat Message',
@@ -427,6 +440,6 @@ module.exports = {
 			}
 		};*/
 
-		self.setActionDefinitions(actions);
-	}
+		self.setActionDefinitions(actions)
+	},
 }

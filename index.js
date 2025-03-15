@@ -4,13 +4,13 @@ const { InstanceBase, InstanceStatus, runEntrypoint } = require('@companion-modu
 
 const UpgradeScripts = require('./src/upgrades')
 
-const config = require('./src/config');
-const api = require('./src/api');
+const config = require('./src/config')
+const api = require('./src/api')
 
-const actions = require('./src/actions');
-const variables = require('./src/variables');
-const feedbacks = require('./src/feedbacks');
-const presets = require('./src/presets');
+const actions = require('./src/actions')
+const variables = require('./src/variables')
+const feedbacks = require('./src/feedbacks')
+const presets = require('./src/presets')
 
 class PCOLiveInstance extends InstanceBase {
 	constructor(internal) {
@@ -23,7 +23,7 @@ class PCOLiveInstance extends InstanceBase {
 			...actions,
 			...variables,
 			...feedbacks,
-			...presets,			
+			...presets,
 		})
 
 		this.currentState = {
@@ -31,10 +31,10 @@ class PCOLiveInstance extends InstanceBase {
 				services: [],
 				plans: [],
 				plan_times: [],
-				services_list: [{id: '', label: 'No Services loaded. Update instance config.'}],
-				services_withorg_list: [{id: '0', label: 'No Services loaded. Update instance config.'}],
-				plans_list: [{id: '', label: 'No Plans loaded. Update instance config.'}],
-				currentController: null
+				services_list: [{ id: '', label: 'No Services loaded. Update instance config.' }],
+				services_withorg_list: [{ id: '0', label: 'No Services loaded. Update instance config.' }],
+				plans_list: [{ id: '', label: 'No Plans loaded. Update instance config.' }],
+				currentController: null,
 			},
 			dynamicVariables: {
 				orgnization_name: '',
@@ -56,54 +56,54 @@ class PCOLiveInstance extends InstanceBase {
 
 				plan_nextitem: '',
 				plan_nextitem_time_length: '',
-				plan_nextitem_key: ''
-			}
-		};
+				plan_nextitem_key: '',
+			},
+		}
 
-		this.lastServiceTypeId = undefined;
-		this.lastPlanId = undefined;
-		this.lastPlanItemId = undefined;
+		this.lastServiceTypeId = undefined
+		this.lastPlanId = undefined
+		this.lastPlanItemId = undefined
 
-		this.INTERVAL = null;
-		this.ITEM_TIME_REMAINING_INTERVAL = null;
+		this.INTERVAL = null
+		this.ITEM_TIME_REMAINING_INTERVAL = null
 
-		this.scheduledPeople = []; //array of people scheduled to the current plan being controlled
+		this.scheduledPeople = [] //array of people scheduled to the current plan being controlled
 	}
 
 	async init(config) {
-		this.configUpdated(config);
+		this.configUpdated(config)
 	}
 
 	async configUpdated(config) {
 		this.config = config
 
-		this.initActions();
-		this.initFeedbacks();
-		this.initVariables();
-		this.initPresets();
+		this.initActions()
+		this.initFeedbacks()
+		this.initVariables()
+		this.initPresets()
 
-		this.checkVariables();
-		this.checkFeedbacks();
+		this.checkVariables()
+		this.checkFeedbacks()
 
-		this.updateStatus(InstanceStatus.Connecting);
-		
-		this.stopInterval();
+		this.updateStatus(InstanceStatus.Connecting)
 
-		this.lastServiceTypeId = undefined;
-		this.lastPlanId = undefined;
-		this.lastPlanItemId = undefined;
+		this.stopInterval()
 
-		this.initPCOLive();
+		this.lastServiceTypeId = undefined
+		this.lastPlanId = undefined
+		this.lastPlanItemId = undefined
+
+		this.initPCOLive()
 	}
 
 	async destroy() {
 		//close out any connections
-		this.stopInterval();
+		this.stopInterval()
 
-		this.lastServiceTypeId = undefined;
-		this.lastPlanId = undefined;
-		this.lastPlanItemId = undefined;
+		this.lastServiceTypeId = undefined
+		this.lastPlanId = undefined
+		this.lastPlanItemId = undefined
 	}
 }
 
-runEntrypoint(PCOLiveInstance, UpgradeScripts);
+runEntrypoint(PCOLiveInstance, UpgradeScripts)

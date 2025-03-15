@@ -2,8 +2,8 @@ const { combineRgb } = require('@companion-module/base')
 
 module.exports = {
 	initPresets() {
-		let self = this;
-		let presets = [];
+		let self = this
+		let presets = []
 
 		presets.plan_index = {
 			type: 'button',
@@ -18,11 +18,11 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
-			feedbacks: []
-		};
+			feedbacks: [],
+		}
 
 		presets.currentitem = {
 			type: 'button',
@@ -37,11 +37,11 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
-			feedbacks: []
-		};
+			feedbacks: [],
+		}
 
 		presets.currentitem_time_length = {
 			type: 'button',
@@ -56,11 +56,11 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
-			feedbacks: []
-		};
+			feedbacks: [],
+		}
 
 		presets.currentitem_time_started = {
 			type: 'button',
@@ -75,11 +75,11 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
-			feedbacks: []
-		};
+			feedbacks: [],
+		}
 
 		presets.current_item_time_remaining = {
 			type: 'button',
@@ -94,8 +94,8 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
 			feedbacks: [
 				{
@@ -105,9 +105,9 @@ module.exports = {
 						color: combineRgb(255, 255, 255),
 						bgcolor: combineRgb(255, 0, 0),
 					},
-				}
-			]
-		};
+				},
+			],
+		}
 
 		presets.currentitem_time_shouldfinish = {
 			type: 'button',
@@ -122,8 +122,8 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
 			feedbacks: [
 				{
@@ -133,9 +133,9 @@ module.exports = {
 						color: combineRgb(255, 255, 255),
 						bgcolor: combineRgb(255, 0, 0),
 					},
-				}
-			]
-		};
+				},
+			],
+		}
 
 		presets.currentitem_key = {
 			type: 'button',
@@ -150,11 +150,11 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
-			feedbacks: []
-		};
+			feedbacks: [],
+		}
 
 		presets.nextitem = {
 			type: 'button',
@@ -169,11 +169,11 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
-			feedbacks: []
-		};
+			feedbacks: [],
+		}
 
 		presets.nextitem_time_length = {
 			type: 'button',
@@ -188,11 +188,11 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
-			feedbacks: []
-		};
+			feedbacks: [],
+		}
 
 		presets.nextitem_key = {
 			type: 'button',
@@ -207,12 +207,11 @@ module.exports = {
 			steps: [
 				{
 					down: [],
-					up: []
-				}
+					up: [],
+				},
 			],
-			feedbacks: []
-		};
-
+			feedbacks: [],
+		}
 
 		this.setPresetDefinitions(presets)
 	},

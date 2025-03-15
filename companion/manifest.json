@@ -21,10 +21,6 @@
 		"entrypoint": "../index.js"
 	},
 	"manufacturer": "Planning Center Online",
-	"products": [
-		"Services Live"
-	],
-	"keywords": [
-		"Show Control"
-	]
+	"products": ["Services Live"],
+	"keywords": ["Show Control"]
 }
