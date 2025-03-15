@@ -68,6 +68,13 @@ class PCOLiveInstance extends InstanceBase {
 		this.ITEM_TIME_REMAINING_INTERVAL = null
 
 		this.scheduledPeople = [] //array of people scheduled to the current plan being controlled
+
+		this.CHOICES_POSITIONS = [
+			{
+				id: 'scheduled_no_people',
+				label: 'No people scheduled',
+			},
+		]
 	}
 
 	async init(config) {

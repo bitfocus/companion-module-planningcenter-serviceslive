@@ -762,14 +762,35 @@ module.exports = {
 				let teamName = team?.attributes.name || ''
 				let positionName = person.attributes.team_position_name
 				let personName = person.attributes.name
+				let photoThumbnail = person.attributes.photo_thumbnail
 				let personObj = {
 					personId: personId,
 					name: personName,
 					teamId: teamId,
 					teamName: teamName,
 					positionName: positionName,
+					photoThumbnail: photoThumbnail,
 				}
 				self.scheduledPeople.push(personObj)
+
+				//fetch the person photo if it exists and attach it to the person object
+				//the thumbnail is a full url
+				if (photoThumbnail && photoThumbnail.length > 0) {
+					let personPhotoUrl = photoThumbnail
+					self
+						.getPersonPhoto(personId, personPhotoUrl)
+						.then(function (result) {
+							if (result) {
+								personObj.photo = result
+							}
+						})
+						.catch(function (message) {
+							self.log('error', 'Error getting person photo: ' + message)
+						})
+				}
+				else {
+					personObj.photo = null //set the photo to null if there is no photo
+				}
 			}
 
 			//now sort the array by team name and then by position name
@@ -789,11 +810,79 @@ module.exports = {
 				return 0
 			})
 
-			self.initVariables()
+			//now create a POSITION_CHOICES array for feedbacks
+			if (self.scheduledPeople.length > 0) {
+				self.CHOICES_POSITIONS = []
+				let lastPosition = ''
+				let lastPositionCount = 1
+				self.scheduledPeople.forEach((person) => {
+					let teamName = person.teamName
+					let teamNameId = teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+
+					let positionName = person.positionName
+					let positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+
+					if (positionName === lastPosition) {
+						//if the position name is the same as the last one, add a number to the end of the id
+						lastPositionCount++
+					} else {
+						lastPosition = positionName
+						lastPositionCount = 1
+					}
+
+					let teamPositionObj = {
+						//id: `scheduled_${teamNameId}_${positionNameId}_${lastPositionCount}`, //make the id unique by adding the team name and position name and a number to the end
+						id: person.personId, //use the person id as the id
+						label: `${teamName} - ${positionName} ${lastPositionCount > 1 ? '(' + lastPositionCount + ')' : ''}`, //label the position with the team name and position name, and show the number if it's greater than 1
+					}
+
+					self.CHOICES_POSITIONS.push(teamPositionObj)
+				})
+			} else {
+				self.CHOICES_POSITIONS = [
+					{
+						id: 'scheduled_no_people',
+						label: 'No people scheduled',
+					},
+				]
+			}
+
+			self.initVariables() //update the variables because the team/position values have changed
+			self.initFeedbacks() //update the feedbacks because the team/position values have changed
 			self.checkVariables()
 		} catch (error) {
 			self.log('warn', 'Error processing team positions: ' + error)
 		}
+	},
+
+	async getPersonPhoto(personId, personPhotoUrl) {
+		let self = this;
+	
+		try {
+			const response = await fetch(personPhotoUrl, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			});
+	
+			if (!response.ok) {
+				self.log('error', `Error getting person photo: ${response.status} ${response.statusText}`);
+				return null;
+			}
+	
+			const arrayBuffer = await response.arrayBuffer();
+			const buffer = Buffer.from(arrayBuffer);
+			return self.bufferToBase64(buffer);
+		} catch (error) {
+			self.log('error', `Error getting person photo: ${error.message}`);
+			return null;
+		}
+	},
+	
+	// Convert a Buffer to a base64 string
+	bufferToBase64: function (buffer) {
+		return buffer.toString('base64');
 	},
 
 	/***** This doesn't work so I commented it out for possible future fix. Need to be able to authenticate as an actual user, not just an API account. ******/
