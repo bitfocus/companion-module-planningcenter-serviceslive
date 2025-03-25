@@ -46,15 +46,25 @@ module.exports = {
 					name: teamName + ': ' + positionName,
 				}
 
+				let teamPositionStatusVariable = {
+					variableId: 'scheduled_' + teamNameId + '_' + positionNameId,
+					name: teamName + ': ' + positionName + ' Status',
+				}
+
 				if (positionName === lastPosition) {
 					lastPositionCount++
 					teamPositionVariable.variableId += '_' + lastPositionCount
+					teamPositionVariable.name += ' (' + lastPositionCount + ')'
 				} else {
 					lastPosition = positionName
 					lastPositionCount = 1
 				}
 
+				teamPositionStatusVariable.variableId = teamPositionVariable.variableId + '_status'
+				teamPositionStatusVariable.name = teamPositionVariable.name + ' Status'
+
 				variables.push(teamPositionVariable)
+				variables.push(teamPositionStatusVariable)
 			})
 		}
 
@@ -93,11 +103,11 @@ module.exports = {
 
 			variableObj.last_servicetype_id = this.lastServiceTypeId
 			variableObj.last_servicetype_name = this.lastServiceTypeId
-				? this.currentState.internal.services.find((service) => service.id === this.lastServiceTypeId).attributes.name
+				? this.currentState.internal.services.find((service) => service.id === this.lastServiceTypeId)?.attributes?.name
 				: ''
 			variableObj.last_plan_id = this.lastPlanId
 			variableObj.last_plan_name = this.lastPlanId
-				? this.currentState.internal.plans.find((plan) => plan.id === this.lastPlanId).attributes.dates
+				? this.currentState.internal.plans.find((plan) => plan.id === this.lastPlanId)?.attributes?.dates
 				: ''
 
 			if (self.scheduledPeople.length > 0) {
@@ -122,6 +132,19 @@ module.exports = {
 					}
 
 					variableObj[variableId] = person.name
+
+					let personStatus = ''
+					if (person.status === 'C') {
+						personStatus = 'Confirmed'
+					}
+					if (person.status === 'U') {
+						personStatus = 'Unconfirmed'
+					}
+					if (person.status === 'D') {
+						personStatus = 'Declined'
+					}
+
+					variableObj[`${variableId}_status`] = personStatus
 				})
 			}
 
@@ -130,6 +153,7 @@ module.exports = {
 			//do something with that error
 			if (this.config.verbose) {
 				this.log('debug', 'Error Updating Variables: ' + error)
+				console.log(error)
 			}
 		}
 	},

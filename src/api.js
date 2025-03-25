@@ -77,7 +77,6 @@ module.exports = {
 								.then(function (planId) {
 									self.lastServiceTypeId = self.config.servicetypeid_polling
 									self.lastPlanId = planId
-									self.getTeamPositions()
 									self.startInterval()
 								})
 								.catch(function (message) {
@@ -408,7 +407,6 @@ module.exports = {
 					//plan was moved, let's process the results
 					self.lastServiceTypeId = serviceTypeId
 					self.lastPlanId = planId
-					self.getTeamPositions()
 					self.processLiveData(result)
 					self.startInterval()
 				})
@@ -691,6 +689,7 @@ module.exports = {
 				if (self.lastServiceTypeId && self.lastPlanId) {
 					self.INTERVAL = setInterval(function () {
 						self.getCurrentLive()
+						self.getTeamPositions()
 					}, self.config.pollingRate)
 				} else {
 					self.log(
@@ -698,6 +697,9 @@ module.exports = {
 						'Cannot start polling because we do not know what plan is being controlled yet. Start controlling a plan first.'
 					)
 				}
+			} else {
+				self.getCurrentLive()
+				self.getTeamPositions()
 			}
 		} catch (error) {
 			self.log('error', 'Error starting interval: ' + error)
@@ -727,8 +729,12 @@ module.exports = {
 			let planId = self.lastPlanId
 
 			if (serviceTypeId && planId) {
-				let url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans/${planId}/team_members?include=person,team&filter=confirmed`
+				let url = `${baseAPIUrl}/service_types/${serviceTypeId}/plans/${planId}/team_members?include=person,team&per_page=100`
 
+				if (self.config.verbose) {
+					self.log('debug', 'Getting Team Positions data...')
+				}
+				
 				self
 					.doRest('GET', url, {})
 					.then(function (result) {
@@ -746,143 +752,159 @@ module.exports = {
 	},
 
 	processTeamPositions: function (result) {
-		let self = this
-
+		let self = this;
+	
 		try {
-			let data = result.data
-			let included = result.included
-
-			//loop through each person and find their team and position
-			self.scheduledPeople = []
-			for (let i = 0; i < data.length; i++) {
-				let person = data[i]
-				let personId = person.relationships.person.data.id
-				let teamId = person.relationships.team.data.id
-				let team = included.find((res) => res.type === 'Team' && res.id === teamId)
-				let teamName = team?.attributes.name || ''
-				let positionName = person.attributes.team_position_name
-				let personName = person.attributes.name
-				let photoThumbnail = person.attributes.photo_thumbnail
-				let personObj = {
-					personId: personId,
+			const { data, included } = result;
+			const newScheduledPeople = [];
+			const positionCounters = {}; // now keyed by team and position
+	
+			// Process each person from the result data
+			data.forEach((person) => {
+				const personId = person.relationships.person.data.id;
+				const personName = person.attributes.name;
+				const teamId = person.relationships.team.data.id;
+				const team = included.find((res) => res.type === 'Team' && res.id === teamId);
+				const teamName = team?.attributes.name || '';
+				const teamNameId = teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+				const positionName = person.attributes.team_position_name;
+				const positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+	
+				// Create a composite key that includes both team and position
+				const compositeKey = `${teamNameId}-${positionNameId}`;
+				positionCounters[compositeKey] = (positionCounters[compositeKey] || 0) + 1;
+	
+				const personObj = {
+					id: `${compositeKey}-${positionCounters[compositeKey]}`, // Unique display ID
+					personId, // unique identifier from the data
 					name: personName,
-					teamId: teamId,
-					teamName: teamName,
-					positionName: positionName,
-					photoThumbnail: photoThumbnail,
-				}
-				self.scheduledPeople.push(personObj)
-
-				//fetch the person photo if it exists and attach it to the person object
-				//the thumbnail is a full url
-				if (photoThumbnail && photoThumbnail.length > 0) {
-					let personPhotoUrl = photoThumbnail
-					self
-						.getPersonPhoto(personId, personPhotoUrl)
+					teamId,
+					teamName,
+					positionName,
+					status: person.attributes.status, // Only property we care about for change comparison
+					photoThumbnail: person.attributes.photo_thumbnail,
+				};
+	
+				newScheduledPeople.push(personObj);
+	
+				// Asynchronously fetch the person photo (not used in core comparison)
+				if (personObj.photoThumbnail && personObj.photoThumbnail.length > 0) {
+					self.getPersonPhoto(personId, personObj.photoThumbnail)
 						.then(function (result) {
 							if (result) {
-								personObj.photo = result
+								personObj.photo = result;
 							}
 						})
 						.catch(function (message) {
-							self.log('error', 'Error getting person photo: ' + message)
-						})
+							self.log('error', 'Error getting person photo: ' + message);
+						});
+				} else {
+					personObj.photo = null;
 				}
-				else {
-					personObj.photo = null //set the photo to null if there is no photo
-				}
-			}
-
-			//now sort the array by team name and then by position name
-			self.scheduledPeople.sort(function (a, b) {
-				if (a.teamName < b.teamName) {
-					return -1
-				}
-				if (a.teamName > b.teamName) {
-					return 1
-				}
-				if (a.positionName < b.positionName) {
-					return -1
-				}
-				if (a.positionName > b.positionName) {
-					return 1
-				}
-				return 0
-			})
-
-			//now create a POSITION_CHOICES array for feedbacks
-			if (self.scheduledPeople.length > 0) {
-				self.CHOICES_POSITIONS = []
-				let lastPosition = ''
-				let lastPositionCount = 1
-				self.scheduledPeople.forEach((person) => {
-					let teamName = person.teamName
-					let teamNameId = teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
-
-					let positionName = person.positionName
-					let positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
-
-					if (positionName === lastPosition) {
-						//if the position name is the same as the last one, add a number to the end of the id
-						lastPositionCount++
-					} else {
-						lastPosition = positionName
-						lastPositionCount = 1
+			});
+	
+			// Sort newScheduledPeople by teamName and then by positionName
+			newScheduledPeople.sort((a, b) => {
+				const teamDiff = a.teamName.localeCompare(b.teamName);
+				if (teamDiff !== 0) return teamDiff;
+				return a.positionName.localeCompare(b.positionName);
+			});
+	
+			// Create a summary mapping personId to status for the new data
+			const newSummary = {};
+			newScheduledPeople.forEach((p) => {
+				newSummary[p.personId] = p.status;
+			});
+	
+			// Create the summary for the previously stored scheduledPeople
+			const oldSummary = {};
+			(self.scheduledPeople || []).forEach((p) => {
+				oldSummary[p.personId] = p.status;
+			});
+	
+			// Compare the two summaries to see if any person has been added, removed, or if their status changed.
+			const summariesEqual = (a, b) => {
+				const aKeys = Object.keys(a).sort();
+				const bKeys = Object.keys(b).sort();
+				if (aKeys.length !== bKeys.length) return false;
+				for (let i = 0; i < aKeys.length; i++) {
+					if (aKeys[i] !== bKeys[i] || a[aKeys[i]] !== b[bKeys[i]]) {
+						return false;
 					}
+				}
+				return true;
+			};
+	
+			const coreChanged = !summariesEqual(newSummary, oldSummary);
+	
+			// Build POSITION_CHOICES for feedbacks.
+			const newChoicesPositions = [];
+			const choicesCounters = {};
+			newScheduledPeople.forEach((person) => {
+				const teamNameId = person.teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+				const positionNameId = person.positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+				const compositeKey = `${teamNameId}-${positionNameId}`;
+				choicesCounters[compositeKey] = (choicesCounters[compositeKey] || 0) + 1;
+				const id = `${compositeKey}-${choicesCounters[compositeKey]}`;
+				const label =
+					`${person.teamName} - ${person.positionName}` +
+					(choicesCounters[compositeKey] > 1 ? ` (${choicesCounters[compositeKey]})` : '');
+				newChoicesPositions.push({ id, label });
+			});
 
-					let teamPositionObj = {
-						//id: `scheduled_${teamNameId}_${positionNameId}_${lastPositionCount}`, //make the id unique by adding the team name and position name and a number to the end
-						id: person.personId, //use the person id as the id
-						label: `${teamName} - ${positionName} ${lastPositionCount > 1 ? '(' + lastPositionCount + ')' : ''}`, //label the position with the team name and position name, and show the number if it's greater than 1
-					}
-
-					self.CHOICES_POSITIONS.push(teamPositionObj)
-				})
-			} else {
-				self.CHOICES_POSITIONS = [
-					{
-						id: 'scheduled_no_people',
-						label: 'No people scheduled',
-					},
-				]
+			newChoicesPositions.sort((a, b) => a.label.localeCompare(b.label));
+	
+			// Compare choices arrays (simple string comparison is sufficient for simple objects)
+			const choicesChanged =
+				JSON.stringify(newChoicesPositions) !== JSON.stringify(self.CHOICES_POSITIONS || []);
+	
+			// Only update if core data or choices have changed
+			if (coreChanged || choicesChanged) {
+				self.scheduledPeople = newScheduledPeople;
+				self.CHOICES_POSITIONS =
+					newScheduledPeople.length > 0
+						? newChoicesPositions
+						: [{ id: 'scheduled_no_people', label: 'No people scheduled' }];
+	
+				self.initVariables();
+				self.initFeedbacks();
 			}
-
-			self.initVariables() //update the variables because the team/position values have changed
-			self.initFeedbacks() //update the feedbacks because the team/position values have changed
-			self.checkVariables()
+	
+			self.checkVariables();
 		} catch (error) {
-			self.log('warn', 'Error processing team positions: ' + error)
+			self.log('warn', 'Error processing team positions: ' + error);
 		}
 	},
 
 	async getPersonPhoto(personId, personPhotoUrl) {
-		let self = this;
-	
+		let self = this
 		try {
-			const response = await fetch(personPhotoUrl, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			});
-	
+			const response = await fetch(personPhotoUrl)
 			if (!response.ok) {
-				self.log('error', `Error getting person photo: ${response.status} ${response.statusText}`);
-				return null;
+				self.log('error', `Error getting person photo: ${response.status} ${response.statusText}`)
+				return null
 			}
-	
-			const arrayBuffer = await response.arrayBuffer();
-			const buffer = Buffer.from(arrayBuffer);
-			return self.bufferToBase64(buffer);
+			const arrayBuffer = await response.arrayBuffer()
+			let buffer = Buffer.from(arrayBuffer)
+
+			// Optionally, use file-type to detect the image format
+			const fileType = await import('file-type').then((module) => module.fileTypeFromBuffer(buffer))
+			if (fileType && fileType.ext !== 'png') {
+				// Convert non-PNG images (like JPEG) to PNG using sharp
+				const sharp = require('sharp')
+				buffer = await sharp(buffer).png().toBuffer()
+			}
+
+			return self.bufferToBase64(buffer)
 		} catch (error) {
-			self.log('error', `Error getting person photo: ${error.message}`);
-			return null;
+			self.log('error', `Error getting person photo: ${error.message}`)
+			return null
 		}
 	},
-	
+
 	// Convert a Buffer to a base64 string
 	bufferToBase64: function (buffer) {
-		return buffer.toString('base64');
+		return buffer.toString('base64')
 	},
 
 	/***** This doesn't work so I commented it out for possible future fix. Need to be able to authenticate as an actual user, not just an API account. ******/
