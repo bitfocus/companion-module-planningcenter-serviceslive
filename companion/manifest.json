@@ -10,7 +10,7 @@
 	"maintainers": [
 		{
 			"name": "Joseph Adams",
-			"email": "josephdadams@gmail.com"
+			"email": "joseph@josephadams.dev"
 		}
 	],
 	"legacyIds": [],
@@ -22,5 +22,5 @@
 	},
 	"manufacturer": "Planning Center Online",
 	"products": ["Services Live"],
-	"keywords": ["Show Control"]
+	"keywords": ["Show Control", "PCO"]
 }
