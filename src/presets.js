@@ -1,11 +1,10 @@
 const { combineRgb } = require('@companion-module/base')
 
-
-const sharp = require('sharp');
+const sharp = require('sharp')
 
 async function generateImages(count) {
-	const width = 72;
-	const height = 72;
+	const width = 72
+	const height = 72
 
 	// Create an array of promises
 	const imagePromises = Array.from({ length: count }, (_, i) => {
@@ -14,7 +13,7 @@ async function generateImages(count) {
 				<rect width="100%" height="100%" fill="black"/>
 				<text x="50%" y="50%" font-size="36" fill="white" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-weight="bold">${i + 1}</text>
 			</svg>
-		`;
+		`
 
 		return sharp({
 			create: {
@@ -27,13 +26,13 @@ async function generateImages(count) {
 			.composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
 			.png()
 			.toBuffer()
-			.then((buffer) => `data:image/png;base64,${buffer.toString('base64')}`);
-	});
+			.then((buffer) => `data:image/png;base64,${buffer.toString('base64')}`)
+	})
 
 	// Wait for all images to be generated
-	const images = await Promise.all(imagePromises);
+	const images = await Promise.all(imagePromises)
 
-	return images;
+	return images
 }
 
 module.exports = {
@@ -304,7 +303,7 @@ module.exports = {
 			category: `Scheduled People - Generic Position`,
 			name: `Generic Position Number - Person Photo With Status`,
 			type: 'text',
-			text: `Show the photo of the person scheduled to the position number, with their status (confirmed, unconfirmed, declined).`
+			text: `Show the photo of the person scheduled to the position number, with their status (confirmed, unconfirmed, declined).`,
 		})
 
 		//now build them for the generic position number with status

@@ -455,9 +455,9 @@ module.exports = {
 
 	restartModule: function () {
 		let self = this
-		
+
 		if (self.config.verbose) {
-			self.log('debug', 'Restarting Connection Logic in 15 seconds...');
+			self.log('debug', 'Restarting Connection Logic in 15 seconds...')
 		}
 		setTimeout(function () {
 			self.initPCOLive()

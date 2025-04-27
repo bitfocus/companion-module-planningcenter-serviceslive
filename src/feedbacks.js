@@ -115,7 +115,7 @@ module.exports = {
 						{ id: 'U', label: 'Unconfirmed' },
 						{ id: 'D', label: 'Declined' },
 					],
-				}
+				},
 			],
 			callback: async (feedback) => {
 				const personId = feedback.options.person
@@ -129,7 +129,7 @@ module.exports = {
 					}
 				}
 				return false
-			}
+			},
 		}
 
 		feedbacks.showPersonPhotoPositionName = {
