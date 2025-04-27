@@ -282,6 +282,51 @@ module.exports = {
 			},
 		}
 
+		feedbacks.showPersonStatusByPositionNumber = {
+			name: 'Show Person Status based on Position Number',
+			type: 'boolean',
+			defaultStyle: {
+				color: colorWhite,
+				bgcolor: colorRed,
+			},
+			options: [
+				{
+					type: 'number',
+					label: 'Position Number',
+					id: 'positionNumber',
+					default: 1,
+					min: 1,
+					max: 100,
+					range: false,
+				},
+				{
+					type: 'dropdown',
+					label: 'Status',
+					id: 'status',
+					default: 'C',
+					choices: [
+						{ id: 'C', label: 'Confirmed' },
+						{ id: 'U', label: 'Unconfirmed' },
+						{ id: 'D', label: 'Declined' },
+					],
+				},
+			],
+			callback: async (feedback) => {
+				const positionNumber = feedback.options.positionNumber
+				const status = feedback.options.status
+
+				//find the person in the scheduledPeople array
+				const person = self.scheduledPeople[positionNumber - 1]
+				if (person) {
+					//check if the person status matches the feedback status
+					if (person.status === status) {
+						return true
+					}
+				}
+				return false
+			},
+		}
+
 		feedbacks.showPersonPhotoPositionNumberByTeam = {
 			name: 'Show Person Photo based on Position Number by Team',
 			type: 'advanced',
@@ -385,6 +430,67 @@ module.exports = {
 				}
 
 				return await personPhoto(person, true, feedback.options)
+			},
+		}
+
+		feedbacks.showPersonStatusPositionNumberByTeam = {
+			name: 'Show Person Status based on Position Number by Team',
+			type: 'boolean',
+			defaultStyle: {
+				color: colorWhite,
+				bgcolor: colorRed,
+			},
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Team',
+					id: 'team',
+					default: self.CHOICES_TEAMS[0].id,
+					choices: self.CHOICES_TEAMS,
+				},
+				{
+					type: 'number',
+					label: 'Position Number',
+					id: 'positionNumber',
+					default: 1,
+					min: 1,
+					max: 100,
+					range: false,
+				},
+				{
+					type: 'dropdown',
+					label: 'Status',
+					id: 'status',
+					default: 'C',
+					choices: [
+						{ id: 'C', label: 'Confirmed' },
+						{ id: 'U', label: 'Unconfirmed' },
+						{ id: 'D', label: 'Declined' },
+					],
+				},
+			],
+			callback: async (feedback) => {
+				const team = feedback.options.team
+				const positionNumber = feedback.options.positionNumber
+				const status = feedback.options.status
+
+				//find the person in the scheduledPeople array
+				let person = undefined
+
+				//find the person in the scheduledPeople array, filtered by team and then use position number as index
+				const people = self.scheduledPeople.filter((p) => p.teamNameId === team)
+
+				if (people.length > 0) {
+					person = people[positionNumber - 1]
+				}
+
+				if (person) {
+					//check if the person status matches the feedback status
+					if (person.status === status) {
+						return true
+					}
+				}
+				return false
 			},
 		}
 

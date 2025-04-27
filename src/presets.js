@@ -376,9 +376,73 @@ module.exports = {
 
 		presets.push({
 			category: `Scheduled People - Generic Position`,
+			name: `Generic Position Number - Person Name with Status Feedback`,
+			type: 'text',
+			text: `Shows the name of the person scheduled to the position number with status feedback (green, yellow, or red depending on if confirmed, unconfirmed, or declined).`,
+		})
+
+		//now build them for the generic position number with status
+		for (let i = 1; i <= 50; i++) {
+			let presetObj = {
+				type: 'button',
+				category: 'Scheduled People - Generic Position',
+				label: `Scheduled Position ${i} - Person Name with Status`,
+				style: {
+					text: `$(services-live:scheduled_position_${i})`,
+					size: 'auto',
+					color: combineRgb(255, 255, 255),
+					bgcolor: combineRgb(0, 0, 0),
+				},
+				steps: [
+					{
+						down: [],
+						up: [],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'showPersonStatusByPositionNumber',
+						options: {
+							positionNumber: i,
+							status: 'C', // Confirmed
+						},
+						style: {
+							color: combineRgb(255, 255, 255),
+							bgcolor: combineRgb(0, 255, 0),
+						},
+					},
+					{
+						feedbackId: 'showPersonStatusByPositionNumber',
+						options: {
+							positionNumber: i,
+							status: 'U', // Unconfirmed
+						},
+						style: {
+							color: combineRgb(255, 255, 255),
+							bgcolor: combineRgb(255, 255, 0),
+						},
+					},
+					{
+						feedbackId: 'showPersonStatusByPositionNumber',
+						options: {
+							positionNumber: i,
+							status: 'D', // Declined
+						},
+						style: {
+							color: combineRgb(255, 255, 255),
+							bgcolor: combineRgb(255, 0, 0),
+						},
+					},
+				],
+			}
+			presets.push(presetObj)
+		}
+
+		presets.push({
+			category: `Scheduled People - Generic Position`,
 			name: `Generic Position Number - Position Name Only`,
 			type: 'text',
-			text: `Presets for Generic Position Number with Position Name Only`,
+			text: `Show the position name of the person scheduled to the position number.`,
 		})
 		//now build them for the generic position number with status
 		for (let i = 1; i <= 50; i++) {
@@ -524,6 +588,72 @@ module.exports = {
 						},
 					],
 					feedbacks: [],
+				}
+				presets.push(presetObj)
+			}
+
+			presets.push({
+				category: `Scheduled People - ${teamName}`,
+				name: `${teamName} - Generic Position Number - Person Name with Status`,
+				type: 'text',
+				text: `Shows the name of the person scheduled to the position number for ${teamName} with status feedback (green, yellow, or red depending on if confirmed, unconfirmed, or declined).`,
+			})
+			//now build them for the generic position number with status
+			for (let i = 1; i <= 30; i++) {
+				let presetObj = {
+					type: 'button',
+					category: `Scheduled People - ${teamName}`,
+					label: `${teamName}: Scheduled Position ${i} - Person Name with Status`,
+					style: {
+						text: `$(services-live:scheduled_${teamId}_position_${i})`,
+						size: 'auto',
+						color: combineRgb(255, 255, 255),
+						bgcolor: combineRgb(0, 0, 0),
+					},
+					steps: [
+						{
+							down: [],
+							up: [],
+						},
+					],
+					feedbacks: [
+						{
+							feedbackId: 'showPersonStatusPositionNumberByTeam',
+							options: {
+								team: teamId,
+								positionNumber: i,
+								status: 'C', // Confirmed
+							},
+							style: {
+								color: combineRgb(255, 255, 255),
+								bgcolor: combineRgb(0, 255, 0),
+							},
+						},
+						{
+							feedbackId: 'showPersonStatusPositionNumberByTeam',
+							options: {
+								team: teamId,
+								positionNumber: i,
+								status: 'U', // Unconfirmed
+							},
+							style: {
+								color: combineRgb(255, 255, 255),
+								bgcolor: combineRgb(255, 255, 0),
+							},
+						},
+						{
+							feedbackId: 'showPersonStatusPositionNumberByTeam',
+							options: {
+								team: teamId,
+								positionNumber: i,
+								status: 'D', // Declined
+							},
+							style: {
+								color: combineRgb(255, 255, 255),
+								bgcolor: combineRgb(255, 0, 0),
+							},
+						},
+					],
 				}
 				presets.push(presetObj)
 			}
