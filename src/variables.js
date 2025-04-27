@@ -32,15 +32,72 @@ module.exports = {
 		]
 
 		if (self.scheduledPeople.length > 0) {
+			let positionCount = 0
+			let teamPositionCount = 1
+			let lastTeamPositionName = ''
+
 			let lastPosition = ''
 			let lastPositionCount = 1
+
 			self.scheduledPeople.forEach((person) => {
+				positionCount++
+
+				//team name and position name are used to build the variable names
 				let teamName = person.teamName
 				let teamNameId = teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
 
+				//this is the position name - this is used to build the variable names
 				let positionName = person.positionName
 				let positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
 
+				//first just build a generic position number variable - this is for recycleable presets where you may not know the position name from plan to plan, but you want to populate buttons
+				let positionNumberVariable = {
+					variableId: 'scheduled_position_' + positionCount,
+					name: 'Scheduled Position ' + positionCount,
+				}
+				variables.push(positionNumberVariable)
+				//now make their status variable
+				let positionStatusVariable = {
+					variableId: 'scheduled_position_' + positionCount + '_status',
+					name: 'Scheduled Position ' + positionCount + ' Status',
+				}
+				variables.push(positionStatusVariable)
+				//make a variable for the position name
+				let positionVariable = {
+					variableId: 'scheduled_position_' + positionCount + '_position',
+					name: 'Scheduled Position ' + positionCount + ' Position Name',
+				}
+				variables.push(positionVariable)
+
+				//now build position number - but by team
+				if (teamName !== lastTeamPositionName) {
+					//reset the team position count
+					teamPositionCount = 1
+					lastTeamPositionName = teamName
+				} else {
+					//increment the team position count
+					teamPositionCount++
+				}
+
+				let teamPositionNumberVariable = {
+					variableId: 'scheduled_' + teamNameId + '_position_' + teamPositionCount,
+					name: teamName + ': Scheduled Position ' + teamPositionCount,
+				}
+
+				let teamPositionStatusNumberVariable = {
+					variableId: 'scheduled_' + teamNameId + '_position_' + teamPositionCount + '_status',
+					name: teamName + ': Scheduled Position ' + teamPositionCount + ' Status',
+				}
+
+				let teamPositionNameVariable = {
+					variableId: 'scheduled_' + teamNameId + '_position_' + teamPositionCount + '_position',
+					name: teamName + ': Scheduled Position ' + teamPositionCount + ' Position Name',
+				}
+				variables.push(teamPositionNumberVariable)
+				variables.push(teamPositionStatusNumberVariable)
+				variables.push(teamPositionNameVariable)
+
+				//then build the position variable based on the name of the person and the team they are on
 				let teamPositionVariable = {
 					variableId: 'scheduled_' + teamNameId + '_' + positionNameId,
 					name: teamName + ': ' + positionName,
@@ -52,6 +109,8 @@ module.exports = {
 				}
 
 				if (positionName === lastPosition) {
+					//if the position name is the same as the last one, then we need to increment the variable id
+					//this is to allow for multiple people in the same position
 					lastPositionCount++
 					teamPositionVariable.variableId += '_' + lastPositionCount
 					teamPositionVariable.name += ' (' + lastPositionCount + ')'
@@ -62,6 +121,11 @@ module.exports = {
 
 				teamPositionStatusVariable.variableId = teamPositionVariable.variableId + '_status'
 				teamPositionStatusVariable.name = teamPositionVariable.name + ' Status'
+
+				teamPositionByNumberVariable = {
+					variableId: 'scheduled_' + teamNameId + '_' + positionNameId,
+					name: teamName + ': ' + positionName,
+				}
 
 				variables.push(teamPositionVariable)
 				variables.push(teamPositionStatusVariable)
@@ -111,7 +175,11 @@ module.exports = {
 				: ''
 
 			if (self.scheduledPeople.length > 0) {
-				//lets build the variables for the teams and positions
+				//lets populate the variables for the teams and positions
+				let positionCount = 1
+				let teamPositionCount = 0
+				let lastTeamPositionName = ''
+
 				let lastPosition = ''
 				let lastPositionCount = 1
 				self.scheduledPeople.forEach((person) => {
@@ -120,18 +188,6 @@ module.exports = {
 
 					let positionName = person.positionName
 					let positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
-
-					let variableId = 'scheduled_' + teamNameId + '_' + positionNameId
-
-					if (positionName === lastPosition) {
-						lastPositionCount++
-						variableId += '_' + lastPositionCount
-					} else {
-						lastPosition = positionName
-						lastPositionCount = 1
-					}
-
-					variableObj[variableId] = person.name
 
 					let personStatus = ''
 					if (person.status === 'C') {
@@ -144,6 +200,34 @@ module.exports = {
 						personStatus = 'Declined'
 					}
 
+					//populate generic position number ones first
+					variableObj['scheduled_position_' + positionCount] = person.name
+					variableObj['scheduled_position_' + positionCount + '_status'] = personStatus
+					variableObj['scheduled_position_' + positionCount + '_position'] = positionName
+					positionCount++
+					//populate team position number ones next
+					if (teamName !== lastTeamPositionName) {
+						//reset the team position count
+						teamPositionCount = 0
+						lastTeamPositionName = teamName
+					}
+					//increment the team position count
+					teamPositionCount++
+					variableObj['scheduled_' + teamNameId + '_position_' + teamPositionCount] = person.name
+					variableObj['scheduled_' + teamNameId + '_position_' + teamPositionCount + '_status'] = personStatus
+					variableObj['scheduled_' + teamNameId + '_position_' + teamPositionCount + '_position'] = positionName
+
+					let variableId = 'scheduled_' + teamNameId + '_' + positionNameId
+
+					if (positionName === lastPosition) {
+						lastPositionCount++
+						variableId += '_' + lastPositionCount
+					} else {
+						lastPosition = positionName
+						lastPositionCount = 1
+					}
+
+					variableObj[variableId] = person.name
 					variableObj[`${variableId}_status`] = personStatus
 				})
 			}

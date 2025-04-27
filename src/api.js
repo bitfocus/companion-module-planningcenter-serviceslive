@@ -442,6 +442,7 @@ module.exports = {
 							self.log('debug', 'Stopping Update Interval.')
 						}
 						self.stopInterval()
+						self.restartModule()
 					})
 			} else {
 				//we can't get the current live data because we don't know what plan they are controlling
@@ -450,6 +451,17 @@ module.exports = {
 			self.log('error', 'Error getting current live data: ' + error)
 			self.updateStatus(InstanceStatus.ConnectionFailure, 'Error getting current live data: ' + error)
 		}
+	},
+
+	restartModule: function () {
+		let self = this
+		
+		if (self.config.verbose) {
+			self.log('debug', 'Restarting Connection Logic in 15 seconds...');
+		}
+		setTimeout(function () {
+			self.initPCOLive()
+		}, 15000)
 	},
 
 	processLiveData: function (result) {
@@ -734,7 +746,7 @@ module.exports = {
 				if (self.config.verbose) {
 					self.log('debug', 'Getting Team Positions data...')
 				}
-				
+
 				self
 					.doRest('GET', url, {})
 					.then(function (result) {
@@ -752,131 +764,146 @@ module.exports = {
 	},
 
 	processTeamPositions: function (result) {
-		let self = this;
-	
+		let self = this
+
 		try {
-			const { data, included } = result;
-			const newScheduledPeople = [];
-			const positionCounters = {}; // now keyed by team and position
-	
+			const { data, included } = result
+			const newScheduledPeople = []
+			const positionCounters = {} // now keyed by team and position
+
 			// Process each person from the result data
 			data.forEach((person) => {
-				const personId = person.relationships.person.data.id;
-				const personName = person.attributes.name;
-				const teamId = person.relationships.team.data.id;
-				const team = included.find((res) => res.type === 'Team' && res.id === teamId);
-				const teamName = team?.attributes.name || '';
-				const teamNameId = teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-				const positionName = person.attributes.team_position_name;
-				const positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-	
+				const personId = person.relationships.person.data.id
+				const personName = person.attributes.name
+				const teamId = person.relationships.team.data.id
+				const team = included.find((res) => res.type === 'Team' && res.id === teamId)
+				const teamName = team?.attributes.name || ''
+				const teamNameId = teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+				const positionName = person.attributes.team_position_name
+				const positionNameId = positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+
 				// Create a composite key that includes both team and position
-				const compositeKey = `${teamNameId}-${positionNameId}`;
-				positionCounters[compositeKey] = (positionCounters[compositeKey] || 0) + 1;
-	
+				const compositeKey = `${teamNameId}-${positionNameId}`
+				positionCounters[compositeKey] = (positionCounters[compositeKey] || 0) + 1
+
 				const personObj = {
 					id: `${compositeKey}-${positionCounters[compositeKey]}`, // Unique display ID
 					personId, // unique identifier from the data
 					name: personName,
 					teamId,
 					teamName,
+					teamNameId,
 					positionName,
 					status: person.attributes.status, // Only property we care about for change comparison
 					photoThumbnail: person.attributes.photo_thumbnail,
-				};
-	
-				newScheduledPeople.push(personObj);
-	
+				}
+
+				newScheduledPeople.push(personObj)
+
 				// Asynchronously fetch the person photo (not used in core comparison)
 				if (personObj.photoThumbnail && personObj.photoThumbnail.length > 0) {
-					self.getPersonPhoto(personId, personObj.photoThumbnail)
+					self
+						.getPersonPhoto(personObj.photoThumbnail)
 						.then(function (result) {
 							if (result) {
-								personObj.photo = result;
+								personObj.photo = result
 							}
 						})
 						.catch(function (message) {
-							self.log('error', 'Error getting person photo: ' + message);
-						});
+							self.log('error', 'Error getting person photo: ' + message)
+						})
 				} else {
-					personObj.photo = null;
+					personObj.photo = null
 				}
-			});
-	
+			})
+
 			// Sort newScheduledPeople by teamName and then by positionName
 			newScheduledPeople.sort((a, b) => {
-				const teamDiff = a.teamName.localeCompare(b.teamName);
-				if (teamDiff !== 0) return teamDiff;
-				return a.positionName.localeCompare(b.positionName);
-			});
-	
+				const teamDiff = a.teamName.localeCompare(b.teamName)
+				if (teamDiff !== 0) return teamDiff
+				return a.positionName.localeCompare(b.positionName)
+			})
+
 			// Create a summary mapping personId to status for the new data
-			const newSummary = {};
+			const newSummary = {}
 			newScheduledPeople.forEach((p) => {
-				newSummary[p.personId] = p.status;
-			});
-	
+				newSummary[p.personId] = p.status
+			})
+
 			// Create the summary for the previously stored scheduledPeople
-			const oldSummary = {};
-			(self.scheduledPeople || []).forEach((p) => {
-				oldSummary[p.personId] = p.status;
-			});
-	
+			const oldSummary = {}
+			;(self.scheduledPeople || []).forEach((p) => {
+				oldSummary[p.personId] = p.status
+			})
+
 			// Compare the two summaries to see if any person has been added, removed, or if their status changed.
 			const summariesEqual = (a, b) => {
-				const aKeys = Object.keys(a).sort();
-				const bKeys = Object.keys(b).sort();
-				if (aKeys.length !== bKeys.length) return false;
+				const aKeys = Object.keys(a).sort()
+				const bKeys = Object.keys(b).sort()
+				if (aKeys.length !== bKeys.length) return false
 				for (let i = 0; i < aKeys.length; i++) {
 					if (aKeys[i] !== bKeys[i] || a[aKeys[i]] !== b[bKeys[i]]) {
-						return false;
+						return false
 					}
 				}
-				return true;
-			};
-	
-			const coreChanged = !summariesEqual(newSummary, oldSummary);
-	
+				return true
+			}
+
+			const coreChanged = !summariesEqual(newSummary, oldSummary)
+
 			// Build POSITION_CHOICES for feedbacks.
-			const newChoicesPositions = [];
-			const choicesCounters = {};
+			const newChoicesPositions = []
+			const choicesCounters = {}
 			newScheduledPeople.forEach((person) => {
-				const teamNameId = person.teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-				const positionNameId = person.positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-				const compositeKey = `${teamNameId}-${positionNameId}`;
-				choicesCounters[compositeKey] = (choicesCounters[compositeKey] || 0) + 1;
-				const id = `${compositeKey}-${choicesCounters[compositeKey]}`;
+				const teamNameId = person.teamName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+				const positionNameId = person.positionName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+				const compositeKey = `${teamNameId}-${positionNameId}`
+				choicesCounters[compositeKey] = (choicesCounters[compositeKey] || 0) + 1
+				const id = `${compositeKey}-${choicesCounters[compositeKey]}`
 				const label =
 					`${person.teamName} - ${person.positionName}` +
-					(choicesCounters[compositeKey] > 1 ? ` (${choicesCounters[compositeKey]})` : '');
-				newChoicesPositions.push({ id, label });
-			});
+					(choicesCounters[compositeKey] > 1 ? ` (${choicesCounters[compositeKey]})` : '')
+				newChoicesPositions.push({ id, label })
+			})
 
-			newChoicesPositions.sort((a, b) => a.label.localeCompare(b.label));
-	
+			newChoicesPositions.sort((a, b) => a.label.localeCompare(b.label))
+
 			// Compare choices arrays (simple string comparison is sufficient for simple objects)
-			const choicesChanged =
-				JSON.stringify(newChoicesPositions) !== JSON.stringify(self.CHOICES_POSITIONS || []);
-	
+			const choicesChanged = JSON.stringify(newChoicesPositions) !== JSON.stringify(self.CHOICES_POSITIONS || [])
+
 			// Only update if core data or choices have changed
 			if (coreChanged || choicesChanged) {
-				self.scheduledPeople = newScheduledPeople;
+				self.scheduledPeople = newScheduledPeople
 				self.CHOICES_POSITIONS =
 					newScheduledPeople.length > 0
 						? newChoicesPositions
-						: [{ id: 'scheduled_no_people', label: 'No people scheduled' }];
-	
-				self.initVariables();
-				self.initFeedbacks();
+						: [{ id: 'scheduled_no_people', label: 'No people scheduled' }]
+
+				//build CHOICES_TEAMS based on the unique team names
+				const uniqueTeams = new Set()
+				newScheduledPeople.forEach((person) => {
+					uniqueTeams.add(person.teamName)
+				})
+				const newChoicesTeams = Array.from(uniqueTeams).map((team) => ({
+					id: team.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(),
+					label: team,
+				}))
+				newChoicesTeams.sort((a, b) => a.label.localeCompare(b.label))
+				self.CHOICES_TEAMS = newChoicesTeams
+
+				self.initVariables()
+				self.initFeedbacks()
+				self.initPresets()
 			}
-	
-			self.checkVariables();
+
+			self.checkVariables()
+			self.checkFeedbacks()
 		} catch (error) {
-			self.log('warn', 'Error processing team positions: ' + error);
+			self.log('warn', 'Error processing team positions: ' + error)
 		}
 	},
 
-	async getPersonPhoto(personId, personPhotoUrl) {
+	async getPersonPhoto(personPhotoUrl) {
 		let self = this
 		try {
 			const response = await fetch(personPhotoUrl)

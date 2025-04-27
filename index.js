@@ -75,6 +75,13 @@ class PCOLiveInstance extends InstanceBase {
 				label: 'No people scheduled',
 			},
 		]
+
+		this.CHOICES_TEAMS = [
+			{
+				id: 'scheduled_no_teams',
+				label: 'No teams scheduled',
+			},
+		]
 	}
 
 	async init(config) {
