@@ -19,7 +19,7 @@
 		"node-rest-client": "^3.1.1"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.3.0",
+		"@companion-module/tools": "~2.0.4",
 		"prettier": "^3.5.3"
 	},
 	"packageManager": "yarn@4.9.2"
