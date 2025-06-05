@@ -4,6 +4,13 @@ on:
   push:
 
 jobs:
+  setup-shell:
+    name: Setup /usr/bin/bash
+    runs-on: ubuntu-latest
+    steps:
+      - name: Symlink /usr/bin/bash
+        run: sudo ln -s /bin/bash /usr/bin/bash
+        
   check:
     name: Check module
 
