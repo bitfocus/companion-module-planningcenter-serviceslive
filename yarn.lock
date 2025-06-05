@@ -5,7 +5,7 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@companion-module/base@npm:^1.11.3":
+"@companion-module/base@npm:^1.12.1":
   version: 1.12.1
   resolution: "@companion-module/base@npm:1.12.1"
   dependencies:
@@ -22,7 +22,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/tools@npm:^2.2.2":
+"@companion-module/tools@npm:^2.3.0":
   version: 2.3.0
   resolution: "@companion-module/tools@npm:2.3.0"
   dependencies:
@@ -2065,8 +2065,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "planningcenter-serviceslive@workspace:."
   dependencies:
-    "@companion-module/base": "npm:^1.11.3"
-    "@companion-module/tools": "npm:^2.2.2"
+    "@companion-module/base": "npm:^1.12.1"
+    "@companion-module/tools": "npm:^2.3.0"
     companion-module-utils: "npm:^0.5.0"
     file-type: "npm:^20.4.1"
     jimp: "npm:^1.6.0"
