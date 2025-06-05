@@ -4,6 +4,8 @@ const Client = require('node-rest-client').Client
 
 const baseAPIUrl = 'https://api.planningcenteronline.com/services/v2'
 
+const { Jimp } = require('jimp')
+
 module.exports = {
 	initPCOLive: function () {
 		let self = this
@@ -917,9 +919,9 @@ module.exports = {
 			// Optionally, use file-type to detect the image format
 			const fileType = await import('file-type').then((module) => module.fileTypeFromBuffer(buffer))
 			if (fileType && fileType.ext !== 'png') {
-				// Convert non-PNG images (like JPEG) to PNG using sharp
-				const sharp = require('sharp')
-				buffer = await sharp(buffer).png().toBuffer()
+				// Convert non-PNG images (like JPEG) to PNG using Jimp
+				const image = await Jimp.read(buffer)
+				buffer = await image.getBuffer('image/png')
 			}
 
 			return self.bufferToBase64(buffer)

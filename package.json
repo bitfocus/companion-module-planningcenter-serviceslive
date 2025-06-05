@@ -1,6 +1,6 @@
 {
 	"name": "planningcenter-serviceslive",
-	"version": "2.2.2",
+	"version": "2.3.0",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -15,8 +15,8 @@
 		"@companion-module/base": "^1.11.3",
 		"companion-module-utils": "^0.5.0",
 		"file-type": "^20.4.1",
-		"node-rest-client": "^3.1.1",
-		"sharp": "^0.33.5"
+		"jimp": "^1.6.0",
+		"node-rest-client": "^3.1.1"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.2.2",

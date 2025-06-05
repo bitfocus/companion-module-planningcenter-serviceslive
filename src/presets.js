@@ -1,38 +1,14 @@
 const { combineRgb } = require('@companion-module/base')
 
-const sharp = require('sharp')
+const png64 = require('./png64')
 
 async function generateImages(count) {
-	const width = 72
-	const height = 72
-
-	// Create an array of promises
 	const imagePromises = Array.from({ length: count }, (_, i) => {
-		const svg = `
-			<svg width="${width}" height="${height}">
-				<rect width="100%" height="100%" fill="black"/>
-				<text x="50%" y="50%" font-size="36" fill="white" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-weight="bold">${i + 1}</text>
-			</svg>
-		`
-
-		return sharp({
-			create: {
-				width: width,
-				height: height,
-				channels: 3,
-				background: 'black',
-			},
-		})
-			.composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
-			.png()
-			.toBuffer()
-			.then((buffer) => `data:image/png;base64,${buffer.toString('base64')}`)
+		return png64[i+1]
 	})
 
-	// Wait for all images to be generated
-	const images = await Promise.all(imagePromises)
-
-	return images
+	const images = await Promise.all(imagePromises);
+	return images;
 }
 
 module.exports = {
