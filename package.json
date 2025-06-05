@@ -1,6 +1,6 @@
 {
 	"name": "planningcenter-serviceslive",
-	"version": "2.3.0",
+	"version": "2.3.1",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -21,5 +21,6 @@
 	"devDependencies": {
 		"@companion-module/tools": "^2.2.2",
 		"prettier": "^3.5.3"
-	}
+	},
+	"packageManager": "yarn@4.5.3"
 }
