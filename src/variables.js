@@ -69,6 +69,13 @@ module.exports = {
 				}
 				variables.push(positionVariable)
 
+				//variable for photo thumbnail
+				let positionPhotoThumbnailVariable = {
+					variableId: 'scheduled_position_' + positionCount + '_photo_thumbnail',
+					name: 'Scheduled Position ' + positionCount + ' Photo Thumbnail',
+				}
+				variables.push(positionPhotoThumbnailVariable)
+
 				//now build position number - but by team
 				if (teamName !== lastTeamPositionName) {
 					//reset the team position count
@@ -93,9 +100,15 @@ module.exports = {
 					variableId: 'scheduled_' + teamNameId + '_position_' + teamPositionCount + '_position',
 					name: teamName + ': Scheduled Position ' + teamPositionCount + ' Position Name',
 				}
+
+				let teamPositionPhotoThumbnailNumberVariable = {
+					variableId: 'scheduled_' + teamNameId + '_position_' + teamPositionCount + '_photo_thumbnail',
+					name: teamName + ': Scheduled Position ' + teamPositionCount + ' Photo Thumbnail',
+				}
 				variables.push(teamPositionNumberVariable)
 				variables.push(teamPositionStatusNumberVariable)
 				variables.push(teamPositionNameVariable)
+				variables.push(teamPositionPhotoThumbnailNumberVariable)
 
 				//then build the position variable based on the name of the person and the team they are on
 				let teamPositionVariable = {
@@ -106,6 +119,12 @@ module.exports = {
 				let teamPositionStatusVariable = {
 					variableId: 'scheduled_' + teamNameId + '_' + positionNameId,
 					name: teamName + ': ' + positionName + ' Status',
+				}
+
+				//photo thumbnail variable
+				let teamPositionPhotoThumbnailVariable = {
+					variableId: 'scheduled_' + teamNameId + '_' + positionNameId + '_photo_thumbnail',
+					name: teamName + ': ' + positionName + ' Photo Thumbnail',
 				}
 
 				if (positionName === lastPosition) {
@@ -122,6 +141,9 @@ module.exports = {
 				teamPositionStatusVariable.variableId = teamPositionVariable.variableId + '_status'
 				teamPositionStatusVariable.name = teamPositionVariable.name + ' Status'
 
+				teamPositionPhotoThumbnailVariable.variableId = teamPositionVariable.variableId + '_photo_thumbnail'
+				teamPositionPhotoThumbnailVariable.name = teamPositionVariable.name + ' Photo Thumbnail'
+
 				teamPositionByNumberVariable = {
 					variableId: 'scheduled_' + teamNameId + '_' + positionNameId,
 					name: teamName + ': ' + positionName,
@@ -129,6 +151,7 @@ module.exports = {
 
 				variables.push(teamPositionVariable)
 				variables.push(teamPositionStatusVariable)
+				variables.push(teamPositionPhotoThumbnailVariable)
 			})
 		}
 
@@ -204,6 +227,7 @@ module.exports = {
 					variableObj['scheduled_position_' + positionCount] = person.name
 					variableObj['scheduled_position_' + positionCount + '_status'] = personStatus
 					variableObj['scheduled_position_' + positionCount + '_position'] = positionName
+					variableObj['scheduled_position_' + positionCount + '_photo_thumbnail'] = person.photoThumbnail
 					positionCount++
 					//populate team position number ones next
 					if (teamName !== lastTeamPositionName) {
@@ -216,6 +240,8 @@ module.exports = {
 					variableObj['scheduled_' + teamNameId + '_position_' + teamPositionCount] = person.name
 					variableObj['scheduled_' + teamNameId + '_position_' + teamPositionCount + '_status'] = personStatus
 					variableObj['scheduled_' + teamNameId + '_position_' + teamPositionCount + '_position'] = positionName
+					variableObj['scheduled_' + teamNameId + '_position_' + teamPositionCount + '_photo_thumbnail'] =
+						person.photoThumbnail
 
 					let variableId = 'scheduled_' + teamNameId + '_' + positionNameId
 
@@ -229,6 +255,7 @@ module.exports = {
 
 					variableObj[variableId] = person.name
 					variableObj[`${variableId}_status`] = personStatus
+					variableObj[`${variableId}_photo_thumbnail`] = person.photoThumbnail
 				})
 			}
 
