@@ -20,10 +20,14 @@ module.exports = {
 			{ variableId: 'plan_currentitem_time_remaining_seconds', name: 'Plan Current Item Time Remaining Seconds' },
 			{ variableId: 'plan_currentitem_time_shouldfinish', name: 'Plan Current Item Time Should Finish' },
 			{ variableId: 'plan_currentitem_key', name: 'Plan Current Item Key' },
+			{ variableId: 'plan_currentitem_description', name: 'Plan Current Item Description' },
+			{ variableId: 'plan_currentitem_notes', name: 'Plan Current Item Notes' },
 
 			{ variableId: 'plan_nextitem', name: 'Plan Next Item' },
 			{ variableId: 'plan_nextitem_time_length', name: 'Plan Next Item Time Length' },
 			{ variableId: 'plan_nextitem_key', name: 'Plan Next Item Key' },
+			{ variableId: 'plan_nextitem_description', name: 'Plan Next Item Description' },
+			{ variableId: 'plan_nextitem_notes', name: 'Plan Next Item Notes' },
 
 			{ variableId: 'last_servicetype_id', name: 'Last Controlled Service Type Id' },
 			{ variableId: 'last_servicetype_name', name: 'Last Controlled Service Type Name' },
@@ -183,10 +187,12 @@ module.exports = {
 			variableObj.plan_currentitem_time_shouldfinish =
 				this.currentState.dynamicVariables.plan_currentitem_time_shouldfinish
 			variableObj.plan_currentitem_key = this.currentState.dynamicVariables.plan_currentitem_key
+			variableObj.plan_currentitem_description = this.currentState.dynamicVariables.plan_currentitem_description
 
 			variableObj.plan_nextitem = this.currentState.dynamicVariables.plan_nextitem
 			variableObj.plan_nextitem_time_length = this.currentState.dynamicVariables.plan_nextitem_time_length
 			variableObj.plan_nextitem_key = this.currentState.dynamicVariables.plan_nextitem_key
+			variableObj.plan_nextitem_description = this.currentState.dynamicVariables.plan_nextitem_description
 
 			variableObj.last_servicetype_id = this.lastServiceTypeId
 			variableObj.last_servicetype_name = this.lastServiceTypeId

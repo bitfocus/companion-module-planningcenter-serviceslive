@@ -543,6 +543,13 @@ module.exports = {
 							self.currentState.dynamicVariables['plan_currentitem_key'] = ''
 						}
 
+						//description
+						if (item.attributes.description) {
+							self.currentState.dynamicVariables['plan_currentitem_description'] = item.attributes.description
+						} else {
+							self.currentState.dynamicVariables['plan_currentitem_description'] = ''
+						}
+
 						self.currentState.dynamicVariables['plan_nextitem'] = ''
 						self.currentState.dynamicVariables['plan_nextitem_time_length'] = ''
 						self.currentState.dynamicVariables['plan_nextitem_key'] = ''
@@ -570,6 +577,13 @@ module.exports = {
 									self.currentState.dynamicVariables['plan_nextitem'] = 'END OF SERVICE'
 									self.currentState.dynamicVariables['plan_nextitem_time_length'] = ''
 									break
+								}
+
+								//description
+								if (items[i].attributes.description) {
+									self.currentState.dynamicVariables['plan_nextitem_description'] = items[i].attributes.description
+								} else {
+									self.currentState.dynamicVariables['plan_nextitem_description'] = ''
 								}
 							}
 						}
