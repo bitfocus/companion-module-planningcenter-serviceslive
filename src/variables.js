@@ -21,19 +21,30 @@ module.exports = {
 			{ variableId: 'plan_currentitem_time_shouldfinish', name: 'Plan Current Item Time Should Finish' },
 			{ variableId: 'plan_currentitem_key', name: 'Plan Current Item Key' },
 			{ variableId: 'plan_currentitem_description', name: 'Plan Current Item Description' },
-			{ variableId: 'plan_currentitem_notes', name: 'Plan Current Item Notes' },
 
 			{ variableId: 'plan_nextitem', name: 'Plan Next Item' },
 			{ variableId: 'plan_nextitem_time_length', name: 'Plan Next Item Time Length' },
 			{ variableId: 'plan_nextitem_key', name: 'Plan Next Item Key' },
 			{ variableId: 'plan_nextitem_description', name: 'Plan Next Item Description' },
-			{ variableId: 'plan_nextitem_notes', name: 'Plan Next Item Notes' },
 
 			{ variableId: 'last_servicetype_id', name: 'Last Controlled Service Type Id' },
 			{ variableId: 'last_servicetype_name', name: 'Last Controlled Service Type Name' },
 			{ variableId: 'last_plan_id', name: 'Last Controlled Plan Id' },
 			{ variableId: 'last_plan_name', name: 'Last Controlled Plan Name' },
 		]
+
+		if (self.planItemNoteCategories.length > 0) {
+			//if we have note categories, then lets add them to the variables
+			console.log('planItemNoteCategories', self.planItemNoteCategories)
+			self.planItemNoteCategories.forEach((category) => {
+				let variableId = 'plan_currentitem_notes_' + self.sanitize(category.name)
+				let variableName = 'Plan Current Item Notes - ' + category.name
+				variables.push({ variableId: variableId, name: variableName })
+				variableId = 'plan_nextitem_notes_' + self.sanitize(category.name)
+				variableName = 'Plan Next Item Notes - ' + category.name
+				variables.push({ variableId: variableId, name: variableName })
+			})
+		}
 
 		if (self.scheduledPeople.length > 0) {
 			let positionCount = 0

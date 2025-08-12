@@ -67,6 +67,8 @@ class PCOLiveInstance extends InstanceBase {
 		this.INTERVAL = null
 		this.ITEM_TIME_REMAINING_INTERVAL = null
 
+		this.planItemNoteCategories = [] //array of plan item note categories for the current service type
+
 		this.scheduledPeople = [] //array of people scheduled to the current plan being controlled
 
 		this.CHOICES_POSITIONS = [

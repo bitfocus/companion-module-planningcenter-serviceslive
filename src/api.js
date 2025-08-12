@@ -550,6 +550,30 @@ module.exports = {
 							self.currentState.dynamicVariables['plan_currentitem_description'] = ''
 						}
 
+						self.getItemNotes(item.id).then((notes) => {
+							let variableObj = {}
+
+							//loop through every item category and clear the variable for that category
+							// this will ensure that if there are no notes for a category, the variable will be empty
+							self.planItemNoteCategories.forEach((category) => {
+								let variableId = 'plan_currentitem_notes_' + self.sanitize(category.name)
+								if (!variableObj[variableId]) {
+									variableObj[variableId] = ''
+								}
+							})
+
+							//now loop through the notes and assign them to the variable
+							notes.forEach((note) => {
+								let categoryName = note.attributes.category_name
+								let variableId = 'plan_currentitem_notes_' + self.sanitize(categoryName)
+								let variableName = 'Plan Current Item Notes - ' + categoryName
+
+								variableObj[variableId] = note.attributes.content
+							})
+
+							self.setVariableValues(variableObj)
+						})
+
 						self.currentState.dynamicVariables['plan_nextitem'] = ''
 						self.currentState.dynamicVariables['plan_nextitem_time_length'] = ''
 						self.currentState.dynamicVariables['plan_nextitem_key'] = ''
@@ -585,6 +609,30 @@ module.exports = {
 								} else {
 									self.currentState.dynamicVariables['plan_nextitem_description'] = ''
 								}
+
+								self.getItemNotes(items[i].id).then((notes) => {
+									let variableObj = {}
+
+									//loop through every item category and clear the variable for that category
+									// this will ensure that if there are no notes for a category, the variable will be empty
+									self.planItemNoteCategories.forEach((category) => {
+										let variableId = 'plan_nextitem_notes_' + self.sanitize(category.name)
+										if (!variableObj[variableId]) {
+											variableObj[variableId] = ''
+										}
+									})
+
+									//now loop through the notes and assign them to the variable
+									notes.forEach((note) => {
+										let categoryName = note.attributes.category_name
+										let variableId = 'plan_nextitem_notes_' + self.sanitize(categoryName)
+										let variableName = 'Plan Next Item Notes - ' + categoryName
+
+										variableObj[variableId] = note.attributes.content
+									})
+
+									self.setVariableValues(variableObj)
+								})
 							}
 						}
 					}
@@ -631,6 +679,63 @@ module.exports = {
 			self.log('error', 'Error processing LIVE data: ' + error)
 			self.updateStatus(InstanceStatus.ConnectionFailure, 'Error processing LIVE data: ' + error)
 		}
+	},
+
+	getItemNoteCategories: function () {
+		//https://api.planningcenteronline.com/services/v2/service_types/{service_type_id}/item_note_categories
+		let self = this
+
+		//get the categories and then assign them to self.planItemNoteCategories with id, categoryName, variableId (santized), and variableName
+		if (!self.lastServiceTypeId) {
+			return Promise.reject('No Service Type Id set. Please select a service type first.')
+		}
+
+		return new Promise(function (resolve, reject) {
+			self.doRest('GET', `https://api.planningcenteronline.com/services/v2/service_types/${self.lastServiceTypeId}/item_note_categories`, {})
+				.then(function (result) {
+					// Process the result and assign to self.planItemNoteCategories for both currentitem and nextitem
+					self.planItemNoteCategories = result.data.map((category) => {
+						return {
+							id: category.id,
+							name: category.attributes.name,
+						}
+					})
+					self.initVariables() //initialize the variables for the item note categories
+					self.checkVariables() //check the variables to update the UI
+					self.checkFeedbacks() //check the feedbacks to update the UI
+					// Resolve the promise with the categories
+					resolve(result.data)
+				})
+				.catch(function (error) {
+					reject(error)
+				})
+		})
+	},
+
+	sanitize: function (str) {
+		if (typeof str !== 'string') {
+			return ''
+		}
+
+		// Remove any characters that are not alphanumeric, underscore, or hyphen
+		return str.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase()
+	},
+
+	//Get the notes for the current item
+	getItemNotes: function (itemId) {
+		//GET https://api.planningcenteronline.com/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/item_notes
+		let self = this
+
+		return new Promise(function (resolve, reject) {
+			self.doRest('GET', `https://api.planningcenteronline.com/services/v2/service_types/${self.lastServiceTypeId}/plans/${self.lastPlanId}/items/${itemId}/item_notes`, {})
+				.then(function (result) {
+
+					resolve(result.data)
+				})
+				.catch(function (error) {
+					reject(error)
+				})
+		})
 	},
 
 	startPlanItemTimeRemainingInterval: function (dtTimeStarted, dtTimeShouldFinish) {
@@ -717,6 +822,7 @@ module.exports = {
 				if (self.lastServiceTypeId && self.lastPlanId) {
 					self.INTERVAL = setInterval(function () {
 						self.getCurrentLive()
+						self.getItemNoteCategories()
 						self.getTeamPositions()
 					}, self.config.pollingRate)
 				} else {
