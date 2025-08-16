@@ -584,17 +584,47 @@ module.exports = {
 								//if the next thing is an ItemTime, not an Item, it's likely the "END OF SERVICE"
 
 								if (items[i].attributes.item_type == 'item' || items[i].attributes.item_type == 'song') {
+									//if the item type is a song, grab the key name and other stuff
+									if (item.attributes.item_type == 'song') {
+										self.currentState.dynamicVariables['plan_nextitem_key'] = item.attributes.key_name
+									}
+
 									self.currentState.dynamicVariables['plan_nextitem'] = items[i].attributes.title
 									let timeLength = items[i].attributes.length
 									let timeLength_formatted =
 										Math.floor(timeLength / 60) + ':' + ('0' + Math.floor(timeLength % 60)).slice(-2)
 									self.currentState.dynamicVariables['plan_nextitem_time_length'] = timeLength_formatted
-									break
-								}
 
-								//if the item type is a song, grab the key name and other stuff
-								if (item.attributes.item_type == 'song') {
-									self.currentState.dynamicVariables['plan_nextitem_key'] = item.attributes.key_name
+									if (items[i].attributes.description) {
+										self.currentState.dynamicVariables['plan_nextitem_description'] = items[i].attributes.description
+									} else {
+										self.currentState.dynamicVariables['plan_nextitem_description'] = ''
+									}
+
+									self.getItemNotes(items[i].id).then((notes) => {
+										let variableObj = {}
+
+										//loop through every item category and clear the variable for that category
+										// this will ensure that if there are no notes for a category, the variable will be empty
+										self.planItemNoteCategories.forEach((category) => {
+											let variableId = 'plan_nextitem_notes_' + self.sanitize(category.name)
+											if (!variableObj[variableId]) {
+												variableObj[variableId] = ''
+											}
+										})
+
+										//now loop through the notes and assign them to the variable
+										notes.forEach((note) => {
+											let categoryName = note.attributes.category_name
+											let variableId = 'plan_nextitem_notes_' + self.sanitize(categoryName)
+											let variableName = 'Plan Next Item Notes - ' + categoryName
+
+											variableObj[variableId] = note.attributes.content
+										})
+
+										self.setVariableValues(variableObj)
+									})
+									break
 								}
 
 								if (items[i].type == 'ItemTime') {
@@ -602,37 +632,6 @@ module.exports = {
 									self.currentState.dynamicVariables['plan_nextitem_time_length'] = ''
 									break
 								}
-
-								//description
-								if (items[i].attributes.description) {
-									self.currentState.dynamicVariables['plan_nextitem_description'] = items[i].attributes.description
-								} else {
-									self.currentState.dynamicVariables['plan_nextitem_description'] = ''
-								}
-
-								self.getItemNotes(items[i].id).then((notes) => {
-									let variableObj = {}
-
-									//loop through every item category and clear the variable for that category
-									// this will ensure that if there are no notes for a category, the variable will be empty
-									self.planItemNoteCategories.forEach((category) => {
-										let variableId = 'plan_nextitem_notes_' + self.sanitize(category.name)
-										if (!variableObj[variableId]) {
-											variableObj[variableId] = ''
-										}
-									})
-
-									//now loop through the notes and assign them to the variable
-									notes.forEach((note) => {
-										let categoryName = note.attributes.category_name
-										let variableId = 'plan_nextitem_notes_' + self.sanitize(categoryName)
-										let variableName = 'Plan Next Item Notes - ' + categoryName
-
-										variableObj[variableId] = note.attributes.content
-									})
-
-									self.setVariableValues(variableObj)
-								})
 							}
 						}
 					}
@@ -691,7 +690,12 @@ module.exports = {
 		}
 
 		return new Promise(function (resolve, reject) {
-			self.doRest('GET', `https://api.planningcenteronline.com/services/v2/service_types/${self.lastServiceTypeId}/item_note_categories`, {})
+			self
+				.doRest(
+					'GET',
+					`https://api.planningcenteronline.com/services/v2/service_types/${self.lastServiceTypeId}/item_note_categories`,
+					{}
+				)
 				.then(function (result) {
 					// Process the result and assign to self.planItemNoteCategories for both currentitem and nextitem
 					self.planItemNoteCategories = result.data.map((category) => {
@@ -727,9 +731,13 @@ module.exports = {
 		let self = this
 
 		return new Promise(function (resolve, reject) {
-			self.doRest('GET', `https://api.planningcenteronline.com/services/v2/service_types/${self.lastServiceTypeId}/plans/${self.lastPlanId}/items/${itemId}/item_notes`, {})
+			self
+				.doRest(
+					'GET',
+					`https://api.planningcenteronline.com/services/v2/service_types/${self.lastServiceTypeId}/plans/${self.lastPlanId}/items/${itemId}/item_notes`,
+					{}
+				)
 				.then(function (result) {
-
 					resolve(result.data)
 				})
 				.catch(function (error) {

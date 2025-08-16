@@ -35,7 +35,7 @@ module.exports = {
 
 		if (self.planItemNoteCategories.length > 0) {
 			//if we have note categories, then lets add them to the variables
-			console.log('planItemNoteCategories', self.planItemNoteCategories)
+			//console.log('planItemNoteCategories', self.planItemNoteCategories)
 			self.planItemNoteCategories.forEach((category) => {
 				let variableId = 'plan_currentitem_notes_' + self.sanitize(category.name)
 				let variableName = 'Plan Current Item Notes - ' + category.name
