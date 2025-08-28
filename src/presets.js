@@ -4,11 +4,11 @@ const png64 = require('./png64')
 
 async function generateImages(count) {
 	const imagePromises = Array.from({ length: count }, (_, i) => {
-		return png64[i+1]
+		return png64[i + 1]
 	})
 
-	const images = await Promise.all(imagePromises);
-	return images;
+	const images = await Promise.all(imagePromises)
+	return images
 }
 
 module.exports = {
