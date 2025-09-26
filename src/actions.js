@@ -63,6 +63,36 @@ module.exports = {
 			},
 		}
 
+		//reset live times
+		actions.resetLiveTimes = {
+			name: 'Reset Live Times',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'PCO Plan',
+					id: 'planid',
+					default: self.currentState.internal.plans_list[0].id,
+					choices: self.currentState.internal.plans_list,
+					tooltip: 'PCO Service Plan to control.',
+				},
+			],
+			callback: async function (event) {
+				let serviceTypeId = self.getServiceIdFromPlanId(event.options.planid)
+				let planId = event.options.planid
+
+				self
+					.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+						self.controlLive(serviceTypeId, planId, 'reset')
+					})
+					.catch(function (message) {
+						self.log('error', 'Error Resetting Live Times: ' + message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
+
 		actions.nextitem_inservicetype = {
 			name: 'Go to Next Item of Next Plan in Selected Service Type',
 			options: [
@@ -137,6 +167,41 @@ module.exports = {
 			},
 		}
 
+		actions.resetLiveTimes_inservicetype = {
+			name: 'Reset Live Times in Selected Service Type',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'PCO Service Type',
+					id: 'servicetypeid',
+					default: self.currentState.internal.services_list[0].id,
+					choices: self.currentState.internal.services_list,
+					tooltip: 'PCO Service Type',
+				},
+			],
+			callback: async function (event) {
+				let serviceTypeId = event.options.servicetypeid
+				self
+					.getPlanIdOfServiceType(serviceTypeId)
+					.then(function (planId) {
+						self
+							.takeControl(serviceTypeId, planId)
+							.then(function (result) {
+								self.updateStatus(InstanceStatus.Ok)
+								self.controlLive(serviceTypeId, planId, 'reset')
+							})
+							.catch(function (message) {
+								self.log('error', 'Error Resetting Live Times: ' + message)
+								self.updateStatus(InstanceStatus.UnknownError, message)
+							})
+					})
+					.catch(function (message) {
+						self.log('error', 'Error getting Plan Id from Service Type: ' + message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
+
 		actions.nextitem_specific = {
 			name: 'Go to Next Item of a Specific Plan',
 			options: [
@@ -145,12 +210,14 @@ module.exports = {
 					label: 'PCO Service Type Id',
 					id: 'servicetypeid',
 					tooltip: 'PCO Service Type Id.',
+					useVariables: true,
 				},
 				{
 					type: 'textinput',
 					label: 'PCO Plan Id',
 					id: 'planid',
 					tooltip: 'PCO Plan Id.',
+					useVariables: true,
 				},
 			],
 			callback: async function (event) {
@@ -179,12 +246,14 @@ module.exports = {
 					label: 'PCO Service Type Id',
 					id: 'servicetypeid',
 					tooltip: 'PCO Service Type Id to control.',
+					useVariables: true,
 				},
 				{
 					type: 'textinput',
 					label: 'PCO Plan Id',
 					id: 'planid',
 					tooltip: 'PCO Plan Id to control.',
+					useVariables: true,
 				},
 			],
 			callback: async function (event) {
@@ -200,6 +269,41 @@ module.exports = {
 					.catch(function (message) {
 						self.log('error', 'Error going to Previous Item: ' + message)
 						self.log('debug', 'Are the Service Type Id and Plan Id valid?')
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
+
+		actions.resetLiveTimes_specific = {
+			name: 'Reset Live Times of a Specific Plan',
+			options: [
+				{
+					type: 'textinput',
+					label: 'PCO Service Type Id',
+					id: 'servicetypeid',
+					tooltip: 'PCO Service Type Id to control.',
+					useVariables: true,
+				},
+				{
+					type: 'textinput',
+					label: 'PCO Plan Id',
+					id: 'planid',
+					tooltip: 'PCO Plan Id to control.',
+					useVariables: true,
+				},
+			],
+			callback: async function (event) {
+				let serviceTypeId = await self.parseVariablesInString(event.options.servicetypeid)
+				let planId = await self.parseVariablesInString(event.options.planid)
+
+				self
+					.takeControl(serviceTypeId, planId)
+					.then(function (result) {
+						self.updateStatus(InstanceStatus.Ok)
+						self.controlLive(serviceTypeId, planId, 'reset')
+					})
+					.catch(function (message) {
+						self.log('error', 'Error Resetting Live Times: ' + message)
 						self.updateStatus(InstanceStatus.UnknownError, message)
 					})
 			},

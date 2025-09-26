@@ -401,6 +401,10 @@ module.exports = {
 				case 'previous':
 					url = baseUrl + '/go_to_previous_item?include=items,current_item_time'
 					break
+				case 'reset':
+					baseUrl = `${baseAPIUrl}/service_types/${serviceTypeId}/plans/${planId}`
+					url = baseUrl + '/reset_live_times'
+					break
 			}
 
 			self
