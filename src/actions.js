@@ -471,8 +471,8 @@ module.exports = {
 				},
 			],
 			callback: async function (event) {
-				let planid = await self.parseVariablesInString(event.options.planid)
-				let serviceTypeId = self.getServiceIdFromPlanId(planid)
+				let planId = await self.parseVariablesInString(event.options.planid)
+				let serviceTypeId = self.getServiceIdFromPlanId(planId)
 
 				self.lastServiceTypeId = serviceTypeId
 				self.lastPlanId = planId
