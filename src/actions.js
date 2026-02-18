@@ -429,6 +429,78 @@ module.exports = {
 			},
 		}
 
+		actions.takecontrol_inservicetype = {
+			name: 'Take Control of Next Plan in Selected Service Type',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'PCO Service Type',
+					id: 'servicetypeid',
+					default: self.currentState.internal.services_list[0].id,
+					choices: self.currentState.internal.services_list,
+					tooltip: 'PCO Service Type',
+				},
+			],
+			callback: async function (event) {
+				//get the next plan id in the service type, then do the normal requests (take control, advance)
+				let serviceTypeId = event.options.servicetypeid
+				self
+					.getPlanIdOfServiceType(serviceTypeId)
+					.then(function (planId) {
+						self.lastPlanId = planId
+						self.startInterval()
+
+						self
+							.takeControl(serviceTypeId, planId)
+							.then(function (result) {
+								self.updateStatus(InstanceStatus.Ok)
+							})
+							.catch(function (message) {
+								self.log('error', 'Error taking control: ' + message)
+								self.updateStatus(InstanceStatus.UnknownError, message)
+							})
+					})
+					.catch(function (message) {
+						self.log('error', 'Error getting Plan Id from Service Type: ' + message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
+
+		actions.releasecontrol_inservicetype = {
+			name: 'Release Control of Next Plan in Selected Service Type',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'PCO Service Type',
+					id: 'servicetypeid',
+					default: self.currentState.internal.services_list[0].id,
+					choices: self.currentState.internal.services_list,
+					tooltip: 'PCO Service Type',
+				},
+			],
+			callback: async function (event) {
+				let serviceTypeId = event.options.servicetypeid
+				self
+					.getPlanIdOfServiceType(serviceTypeId)
+					.then(function (planId) {
+						self
+							.releaseControl(serviceTypeId, planId)
+							.then(function (result) {
+								self.updateStatus(InstanceStatus.Ok)
+							})
+							.catch(function (message) {
+								self.log('error', 'Error releasing control: ' + message)
+								self.updateStatus(InstanceStatus.UnknownError, message)
+							})
+					})
+					.catch(function (message) {
+						self.log('error', 'Error getting Plan Id from Service Type: ' + message)
+						self.updateStatus(InstanceStatus.UnknownError, message)
+					})
+			},
+		}
+
 		actions.setPlanIdForPolling = {
 			name: 'Set Plan Id for Polling',
 			description:
